@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { signupThunk, loginThunk, verifyEmailThunk, fetchMeThunk, logoutThunk, updateProfileThunk } from "./authThunk";
+import { signupThunk, loginThunk, verifyEmailThunk, fetchMeThunk, logoutThunk, updateProfileThunk, sendOtpThunk, verifyOtpThunk, resetPasswordThunk } from "./authThunk";
 import type { MeResponse as User } from "@/types/user";
 
 interface AuthState {
@@ -69,6 +69,39 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmailThunk.rejected, (state) => {
         state.verifyEmailLoading = false;
+      })
+
+      // SEND OTP
+      .addCase(sendOtpThunk.pending, (state) => {
+        state.sendOtpLoading = true;
+      })
+      .addCase(sendOtpThunk.fulfilled, (state) => {
+        state.sendOtpLoading = false;
+      })
+      .addCase(sendOtpThunk.rejected, (state) => {
+        state.sendOtpLoading = false;
+      })
+
+      // VERIFY OTP
+      .addCase(verifyOtpThunk.pending, (state) => {
+        state.verifyOtpLoading = true;
+      })
+      .addCase(verifyOtpThunk.fulfilled, (state) => {
+        state.verifyOtpLoading = false;
+      })
+      .addCase(verifyOtpThunk.rejected, (state) => {
+        state.verifyOtpLoading = false;
+      })
+
+      // RESET PASSWORD
+      .addCase(resetPasswordThunk.pending, (state) => {
+        state.resetPasswordLoading = true;
+      })
+      .addCase(resetPasswordThunk.fulfilled, (state) => {
+        state.resetPasswordLoading = false;
+      })
+      .addCase(resetPasswordThunk.rejected, (state) => {
+        state.resetPasswordLoading = false;
       })
 
       // FETCH ME (session hydration)
