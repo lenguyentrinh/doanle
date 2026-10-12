@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import InputField from "@/components/InputField";
 import { Spinner } from "./AuthShell";
@@ -37,6 +37,7 @@ export default function ForgotPasswordTag({ open, onClose, defaultEmail }: Props
 function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const pathname = usePathname();
   const { sendOtpLoading } = useSelector((state: RootState) => state.auth);
   const [leaving, setLeaving] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
@@ -108,6 +109,13 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
     }
   };
 
+  // On /login the tag sits over the login form, so closing is enough; on the
+  // OTP page "Đăng nhập" has to actually navigate there.
+  const goToLogin = () => {
+    if (pathname !== "/login") router.push("/login");
+    requestClose();
+  };
+
   const onSubmit = async (data: ForgotEmailValues) => {
     try {
       const result = await dispatch(sendOtpThunk(data)).unwrap();
@@ -176,7 +184,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
               onMouseDown={keepFocus}
               onClick={requestClose}
               aria-label="Đóng"
-              className="absolute right-[26px] top-[66px] grid size-8 place-items-center rounded-full border border-line-strong text-ink-secondary transition-colors duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="absolute right-[26px] top-[66px] z-10 grid size-8 place-items-center rounded-full border border-line-strong text-ink-secondary transition-colors duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               <span aria-hidden className="text-[16px] leading-none">
                 ×
@@ -237,7 +245,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
                 <button
                   type="button"
                   onMouseDown={keepFocus}
-                  onClick={requestClose}
+                  onClick={goToLogin}
                   className="italic font-medium text-accent underline decoration-accent-soft underline-offset-4 transition-colors duration-200 hover:text-accent-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 text-right"
                 >
                   Đăng nhập

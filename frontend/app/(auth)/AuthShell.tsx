@@ -107,7 +107,7 @@ export default function AuthShell({
   totalSteps?: number;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-auth-ground">
+    <div className="relative flex min-h-screen min-h-dvh flex-col overflow-hidden bg-auth-ground">
       <span
         aria-hidden
         className="pointer-events-none fixed -left-10 bottom-[-0.33em] z-0 select-none font-display text-[clamp(220px,34vw,430px)] font-light italic leading-none tracking-[-0.04em] text-fill-dark"
@@ -130,7 +130,7 @@ export default function AuthShell({
         </div>
       </header>
 
-      <main className="relative z-[1] mx-auto grid w-full max-w-[1280px] flex-1 grid-cols-1 items-start px-5 pb-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-[clamp(32px,7vw,124px)] md:px-[clamp(24px,4.4vw,56px)] md:pb-6 md:pt-0">
+      <main className="relative z-[1] mx-auto grid w-full max-w-[1280px] flex-1 grid-cols-1 items-center px-5 pb-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-[clamp(32px,7vw,124px)] md:px-[clamp(24px,4.4vw,56px)] md:pb-6 md:pt-0">
         <div className="sticky top-8 hidden w-full max-w-[440px] justify-self-end md:block">
           <div className="relative h-[clamp(320px,calc(100vh-260px),600px)]">
             <span aria-hidden className="absolute -right-[8%] -top-6 aspect-square w-1/2 rounded-full bg-sand" />
