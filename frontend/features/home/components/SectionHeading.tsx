@@ -10,7 +10,7 @@ export default function SectionHeading({
   right,
   headingId,
 }: {
-  num: string;
+  num?: string;
   title: string;
   right?: ReactNode;
   headingId?: string;
@@ -19,12 +19,14 @@ export default function SectionHeading({
     <div className="relative flex items-end justify-between gap-6 border-b border-line-strong pb-5">
       <span aria-hidden className="absolute bottom-[-1px] left-0 h-px w-[72px] bg-accent" />
       <div className="flex items-baseline gap-5">
-        <span
-          aria-hidden
-          className="font-display text-[clamp(48px,6vw,84px)] font-medium italic leading-[0.74] tracking-[-0.02em] text-line"
-        >
-          {num}
-        </span>
+        {num && (
+          <span
+            aria-hidden
+            className="font-display text-[clamp(48px,6vw,84px)] font-medium italic leading-[0.74] tracking-[-0.02em] text-line"
+          >
+            {num}
+          </span>
+        )}
         <h2
           id={headingId}
           className="font-display text-[clamp(34px,4.4vw,60px)] font-medium leading-none tracking-[-0.024em] text-ink"

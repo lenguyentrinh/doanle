@@ -86,7 +86,6 @@ export default async function HomePage() {
           <section className="mx-auto w-full max-w-[1480px] px-[clamp(16px,3.4vw,44px)] pt-27">
             <div className="mb-[clamp(22px,3vw,38px)]">
               <SectionHeading
-                num="02"
                 title="Danh mục"
                 right={
                   <span className="whitespace-nowrap text-label-xs text-ink-muted">

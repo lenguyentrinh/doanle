@@ -20,7 +20,6 @@ export default function NewArrivals({
     <section aria-labelledby="new-arrivals-heading" className="mx-auto w-full max-w-[1480px] px-[clamp(16px,3.4vw,44px)] pt-24">
       <div className="mb-[clamp(22px,3vw,38px)]">
         <SectionHeading
-          num="01"
           title="Vừa về"
           headingId="new-arrivals-heading"
           right={

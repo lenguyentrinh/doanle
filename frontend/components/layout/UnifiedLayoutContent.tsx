@@ -23,6 +23,7 @@ export default function UnifiedLayoutContent({
     { label: 'Danh mục', href: '/admin/categories', isActive: pathname.startsWith('/admin/categories') },
     { label: 'Giảm giá', href: '/admin/discounts', isActive: pathname.startsWith('/admin/discounts') },
     { label: 'Trang chủ', href: '/admin/home', isActive: pathname.startsWith('/admin/home') },
+    { label: 'Ảnh đăng nhập', href: '/admin/auth-lookbook', isActive: pathname.startsWith('/admin/auth-lookbook') },
     { label: 'Đơn hàng', href: '/admin/orders', isActive: pathname.startsWith('/admin/orders') },
   ];
 

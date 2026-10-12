@@ -101,9 +101,8 @@ export default async function ProductDetailPage({
         {related.length > 0 && (
           <section className="mt-[clamp(56px,7vw,104px)]" aria-labelledby="related-products">
             <div className="mb-6 flex items-baseline gap-4">
-              <span className="text-eyebrow-num">04</span>
               <h2 id="related-products" className="text-display-md text-ink">
-                Phối cùng
+                Sản phẩm liên quan
               </h2>
             </div>
             <div className="flex gap-[clamp(12px,1.5vw,22px)] overflow-x-auto pb-2 [scroll-snap-type:x_mandatory]">

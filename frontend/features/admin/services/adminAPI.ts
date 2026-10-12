@@ -1,6 +1,8 @@
 import { api } from '@/services/api';
 import type { HomeHero } from '@/features/home/types/homeHero';
 import { normalizeHomeHero } from '@/features/home/services/homeHeroApi';
+import type { AuthLookbook } from '@/features/auth/types/authLookbook';
+import { normalizeAuthLookbook } from '@/features/auth/services/authLookbookApi';
 import type {
   OrderStatus,
   OrderItem,
@@ -376,6 +378,30 @@ export const uploadAdminHomeHeroImageAPI = async (file: File): Promise<string> =
   const formData = new FormData();
   formData.append('file', file);
   const res = await api.post('/api/admin/home-hero/images', formData, MULTIPART_CONFIG);
+  const body = res.data as { url?: string; data?: { url?: string } };
+  const url = body.url ?? body.data?.url;
+  if (!url) throw new Error('Upload response missing url');
+  return url;
+};
+
+// Admin auth-screen lookbook (/admin/auth-lookbook). Public read lives in
+// features/auth/services/authLookbookApi.ts. PUT: omitted = unchanged, null = clear.
+export const getAdminAuthLookbookAPI = async (): Promise<AuthLookbook> => {
+  const res = await api.get('/api/admin/auth-lookbook');
+  return normalizeAuthLookbook(res.data);
+};
+
+export const updateAdminAuthLookbookAPI = async (
+  patch: Partial<AuthLookbook>,
+): Promise<AuthLookbook> => {
+  const res = await api.put('/api/admin/auth-lookbook', patch);
+  return normalizeAuthLookbook(res.data);
+};
+
+export const uploadAdminAuthLookbookImageAPI = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post('/api/admin/auth-lookbook/images', formData, MULTIPART_CONFIG);
   const body = res.data as { url?: string; data?: { url?: string } };
   const url = body.url ?? body.data?.url;
   if (!url) throw new Error('Upload response missing url');

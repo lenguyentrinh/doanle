@@ -1,17 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import AuthLookbookFrame from "./AuthLookbookFrame";
 
 const RISE = "motion-safe:animate-[rise_0.8s_cubic-bezier(0.16,1,0.3,1)_both] motion-reduce:animate-none";
 const RISE_DELAY_1 = "motion-safe:animate-[rise_0.8s_cubic-bezier(0.16,1,0.3,1)_0.1s_both] motion-reduce:animate-none";
 // Exported so a page with a bespoke footer (e.g. login's signup CTA card)
 // can stagger it the same way FooterRow does.
 export const RISE_DELAY_2 = "motion-safe:animate-[rise_0.8s_cubic-bezier(0.16,1,0.3,1)_0.2s_both] motion-reduce:animate-none";
-
-// Set to "/images/auth-lookbook.jpg" once the portrait lookbook photo is added
-// to public/images/. Until then the arch frames render as a flat bg-fill-dark
-// placeholder (no 404ing <Image>).
-const LOOKBOOK_SRC: string | null = null;
 
 // 14px spinning ring for a submit button's loading state.
 export function Spinner() {
@@ -68,11 +63,6 @@ function StepIndicator({ step, totalSteps }: { step: number; totalSteps: number 
       </span>
     </div>
   );
-}
-
-function Lookbook() {
-  if (!LOOKBOOK_SRC) return null;
-  return <Image fill priority sizes="440px" className="object-cover" src={LOOKBOOK_SRC} alt="" />;
 }
 
 const legalLinkClass =
@@ -132,16 +122,7 @@ export default function AuthShell({
 
       <main className="relative z-[1] mx-auto grid w-full max-w-[1280px] flex-1 grid-cols-1 items-center px-5 pb-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-[clamp(32px,7vw,124px)] md:px-[clamp(24px,4.4vw,56px)] md:pb-6 md:pt-0">
         <div className="sticky top-8 hidden w-full max-w-[440px] justify-self-end md:block">
-          <div className="relative h-[clamp(320px,calc(100vh-260px),600px)]">
-            <span aria-hidden className="absolute -right-[8%] -top-6 aspect-square w-1/2 rounded-full bg-sand" />
-            <div className="absolute inset-0 overflow-hidden rounded-b-[12px] rounded-t-full bg-fill-dark">
-              <Lookbook />
-            </div>
-          </div>
-          <div className="mt-3.5 flex justify-between text-[11px] text-ink-muted">
-            <span className="font-display text-[14px] italic">Áo khoác len, màu đất</span>
-            <span className="tracking-[0.2em]">N° 014</span>
-          </div>
+          <AuthLookbookFrame />
         </div>
 
         <div className="w-full max-w-[470px] justify-self-center pt-3 md:justify-self-start md:pt-6">

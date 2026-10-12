@@ -12,6 +12,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { HomeHeroModule } from './modules/home-hero/home-hero.module';
+import { AuthLookbookModule } from './modules/auth-lookbook/auth-lookbook.module';
 import { DatabaseModule } from './database/database.config';
 
 @Module({
@@ -31,6 +32,7 @@ import { DatabaseModule } from './database/database.config';
     AdminModule,
     HealthModule,
     HomeHeroModule,
+    AuthLookbookModule,
     ThrottlerModule.forRoot({
       throttlers: [{ name: 'default', ttl: 60000, limit: 60 }],
     }),

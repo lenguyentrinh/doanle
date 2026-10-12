@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 interface NavItem {
@@ -41,6 +42,8 @@ export default function SharedSidebar({
   };
 
   return (
+    <>
+    <MobileNav sections={sections} />
     <aside className="hidden md:block md:w-[232px] md:shrink-0">
       <div className="sticky top-[76px] flex h-[calc(100dvh-76px)] flex-col overflow-y-auto border-r border-line px-6 pt-10 pb-7">
         <nav className="flex shrink-0 flex-col gap-10">
@@ -115,5 +118,52 @@ export default function SharedSidebar({
         )}
       </div>
     </aside>
+    </>
+  );
+}
+
+// Below md the sidebar is hidden, which left admin/account with no navigation
+// at all. This renders the same items as a horizontally scrolling pill bar;
+// the active pill is scrolled into view so deep pages don't hide it off-screen.
+function MobileNav({ sections }: { sections: NavSection[] }) {
+  const activeRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, []);
+
+  const items = sections.flatMap((section) => section.items);
+
+  return (
+    <nav
+      aria-label="Điều hướng"
+      className="flex gap-2 overflow-x-auto border-b border-line px-5 py-3 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+    >
+      {items.map((item) =>
+        item.disabled ? (
+          <span
+            key={`${item.label}-${item.href}`}
+            aria-disabled="true"
+            className="shrink-0 cursor-not-allowed whitespace-nowrap rounded-full border border-line px-4 py-2 text-body-sm text-ink-faint"
+          >
+            {item.label}
+          </span>
+        ) : (
+          <Link
+            key={`${item.label}-${item.href}`}
+            ref={item.isActive ? activeRef : undefined}
+            href={item.href}
+            aria-current={item.isActive ? 'page' : undefined}
+            className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-body-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+              item.isActive
+                ? 'border-ink bg-ink text-white'
+                : 'border-line text-ink-secondary hover:bg-fill hover:text-ink'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ),
+      )}
+    </nav>
   );
 }
