@@ -16,7 +16,7 @@ export const getCartAPI = async (): Promise<CartView> => {
 };
 
 export const addCartItemAPI = async (
-  productId: number,
+  productId: string,
   quantity: number,
 ): Promise<CartView> => {
   const res = await api.post("/api/cart", { productId, quantity });
@@ -24,20 +24,20 @@ export const addCartItemAPI = async (
 };
 
 export const updateCartItemAPI = async (
-  itemId: number,
+  itemId: string,
   quantity: number,
 ): Promise<CartView> => {
   const res = await api.patch(`/api/cart/${itemId}`, { quantity });
   return res.data as CartView;
 };
 
-export const removeCartItemAPI = async (itemId: number): Promise<CartView> => {
+export const removeCartItemAPI = async (itemId: string): Promise<CartView> => {
   const res = await api.delete(`/api/cart/${itemId}`);
   return res.data as CartView;
 };
 
 export const mergeCartAPI = async (
-  items: { productId: number; quantity: number }[],
+  items: { productId: string; quantity: number }[],
 ): Promise<CartView> => {
   const res = await api.post('/api/cart/merge', { items });
   return res.data as CartView;

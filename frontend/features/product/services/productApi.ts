@@ -108,7 +108,7 @@ export async function getProductStats(
 // so the route error boundary catches a real backend failure. The detail
 // endpoint returns `{ data: Product }` and 404s for inactive/soft-deleted rows.
 export async function getProduct(
-  id: number | string,
+  id: string,
   options: { revalidate?: number } = {},
 ): Promise<Product | null> {
   const url = `${API_BASE_URL}/api/products/${id}`;
@@ -131,7 +131,7 @@ export async function getProduct(
 // Fetch a single product by id for client-side reads (e.g., guest cart hydration).
 // Unlike the SSR getProduct above, this uses plain fetch (no revalidate option).
 // The backend GET /api/products/:id is unguarded (no JWT).
-export async function getProductById(id: number): Promise<CartLineProduct> {
+export async function getProductById(id: string): Promise<CartLineProduct> {
   const res = await fetch(`${API_BASE_URL}/api/products/${id}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch product ${id}`);
@@ -145,14 +145,14 @@ export async function getProductById(id: number): Promise<CartLineProduct> {
 // Returns successful fetches alongside the IDs that failed so callers can surface
 // partial failures instead of silently showing an empty cart.
 export async function getProductsByIds(
-  ids: number[],
-): Promise<{ products: CartLineProduct[]; failedIds: number[] }> {
+  ids: string[],
+): Promise<{ products: CartLineProduct[]; failedIds: string[] }> {
   const unique = [...new Set(ids)];
   const results = await Promise.allSettled(
     unique.map((id) => getProductById(id)),
   );
   const products: CartLineProduct[] = [];
-  const failedIds: number[] = [];
+  const failedIds: string[] = [];
   results.forEach((r, i) => {
     if (r.status === 'fulfilled') {
       products.push(r.value);

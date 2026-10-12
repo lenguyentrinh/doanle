@@ -3,7 +3,7 @@
 // backend/src/modules/cart/cart.service.ts (CartLine / CartView).
 
 export interface CartLineProduct {
-  id: number; // product id — the `productId` for POST /api/cart
+  id: string; // product id — the `productId` for POST /api/cart
   name: string;
   price: number; // original unit price — a NUMBER (ColumnNumericTransformer parses the DECIMAL)
   discountPercentage: number | null;
@@ -16,7 +16,7 @@ export interface CartLineProduct {
 export interface CartLine {
   // The cart_items ROW id — this is the `:itemId` for PATCH/DELETE /api/cart/:itemId.
   // NOT the same as `product.id` (the productId used for POST). Never cross them.
-  id: number;
+  id: string;
   product: CartLineProduct;
   quantity: number;
 }

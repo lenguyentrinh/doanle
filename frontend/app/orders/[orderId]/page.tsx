@@ -5,15 +5,14 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 import { showToast } from '@/lib/toast';
-import { formatDate, formatPrice } from '@/lib/helpers';
+import { formatDate, formatPrice, isObjectId } from '@/lib/helpers';
 import { getOrderByIdAPI, type Order } from '@/features/orders/services/ordersAPI';
 import OrderDetail, { orderHeadline } from '@/features/orders/components/OrderDetail';
 import OrderStatusBadge from '@/features/orders/components/OrderStatusBadge';
 
 // Same canonical-id guard as order-confirmation/[orderId]/page.tsx and
-// products/[id]/page.tsx's isNumericId, duplicated locally (a 1-line check).
-const isNumericId = (id: string) =>
-  /^[1-9]\d{0,9}$/.test(id) && Number(id) <= 2147483647;
+// products/[id]/page.tsx's isValidId, duplicated locally (a 1-line check).
+const isValidId = isObjectId; // route ids are Mongo ObjectIds
 
 type ViewState = 'loading' | 'ready' | 'not-found';
 
@@ -33,7 +32,7 @@ function extractErrorMessage(err: unknown): string {
 export default function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { isAuthenticated, authChecked } = useRequireAuth();
-  const validId = isNumericId(orderId);
+  const validId = isValidId(orderId);
   const [state, setState] = useState<ViewState>('loading');
   const [order, setOrder] = useState<Order | null>(null);
 
@@ -41,7 +40,7 @@ export default function OrderDetailPage() {
     if (!authChecked || !isAuthenticated || !validId) return;
 
     let cancelled = false;
-    getOrderByIdAPI(Number(orderId))
+    getOrderByIdAPI(orderId)
       .then((result) => {
         if (cancelled) return;
         if (!result) {

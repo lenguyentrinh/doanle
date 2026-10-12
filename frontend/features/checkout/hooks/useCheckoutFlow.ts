@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 
 export interface CheckoutAddress {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   street: string;
@@ -13,10 +13,10 @@ export interface CheckoutAddress {
 export interface CheckoutFlow {
   step: number;
   address: CheckoutAddress | null;
-  orderId: number | null;
+  orderId: string | null;
   idempotencyKey: string;
   setAddress: (address: CheckoutAddress) => void;
-  setOrderId: (orderId: number) => void;
+  setOrderId: (orderId: string) => void;
   goNext: () => void;
   goBack: () => void;
 }
@@ -30,7 +30,7 @@ export const LAST_STEP = 3;
 export function useCheckoutFlow(): CheckoutFlow {
   const [step, setStep] = useState(0);
   const [address, setAddress] = useState<CheckoutAddress | null>(null);
-  const [orderId, setOrderId] = useState<number | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const goNext = useCallback(() => {

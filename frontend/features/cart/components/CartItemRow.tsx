@@ -11,8 +11,8 @@ import ProductImage from '@/components/ProductImage';
 interface Props {
   line: CartLine;
   index?: number;
-  onUpdateQuantity: (itemId: number, quantity: number) => Promise<unknown>;
-  onRemove: (itemId: number) => Promise<unknown>;
+  onUpdateQuantity: (itemId: string, quantity: number) => Promise<unknown>;
+  onRemove: (itemId: string) => Promise<unknown>;
 }
 
 const isOutOfStock = (s: number) => s === 0;

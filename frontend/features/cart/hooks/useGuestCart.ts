@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CartLine } from "@/types/cart";
-import { getGuestCart } from "@/features/cart/lib/guestCart";
+import { getGuestCart, toGuestLineId } from "@/features/cart/lib/guestCart";
 import { getProductsByIds } from "@/features/product/services/productApi";
 
 export interface GuestCartState {
@@ -19,7 +19,7 @@ export function useGuestCart(): GuestCartState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const cachedProducts = useRef<Map<number, CartLine['product']>>(new Map());
+  const cachedProducts = useRef<Map<string, CartLine['product']>>(new Map());
 
   const refresh = useCallback(() => {
     setRefreshKey((k) => k + 1);
@@ -75,20 +75,18 @@ export function useGuestCart(): GuestCartState {
 }
 
 function buildLines(
-  guestItems: { productId: number; quantity: number }[],
-  products: Map<number, CartLine['product']>,
+  guestItems: { productId: string; quantity: number }[],
+  products: Map<string, CartLine['product']>,
 ): CartLine[] {
   const lines: CartLine[] = [];
   for (const gi of guestItems) {
     const product = products.get(gi.productId);
     if (!product) continue;
-    // Negative product id: unique per the caller's dedupe-by-productId Map,
-    // and always negative so it can never collide with a real (positive)
-    // server-side cart_items row id. `page.tsx`'s guest handlers recover the
-    // product id via Math.abs(itemId) — this must stay derived from the
-    // actual product id, not an array-position counter.
+    // Guest lines have no server row id: use a prefixed product id, which can
+    // never collide with a real cart_items ObjectId. The guest handlers
+    // recover the product id via fromGuestLineId(itemId).
     lines.push({
-      id: -product.id,
+      id: toGuestLineId(product.id),
       product,
       quantity: gi.quantity,
     });

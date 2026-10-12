@@ -22,7 +22,7 @@ export default function PdpPurchasePanel({
   stockQuantity,
   imageUrl,
 }: {
-  productId: number;
+  productId: string;
   productName: string;
   price: number;
   stockQuantity: number;

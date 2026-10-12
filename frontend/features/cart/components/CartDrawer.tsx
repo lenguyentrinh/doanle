@@ -7,7 +7,7 @@ import type { AppDispatch } from '@/store/store';
 import { updateCartItemThunk, removeCartItemThunk } from '@/features/cart/store/cartThunk';
 import { selectCartItems, selectCartSubtotal } from '@/features/cart/store/cartSlice';
 import { useGuestCart } from '@/features/cart/hooks/useGuestCart';
-import { updateGuestCartQuantity, removeFromGuestCart } from '@/features/cart/lib/guestCart';
+import { updateGuestCartQuantity, removeFromGuestCart, fromGuestLineId } from '@/features/cart/lib/guestCart';
 import { useCartDrawer } from '@/features/cart/context/CartDrawerContext';
 import FreeShippingProgress from '@/features/cart/components/FreeShippingProgress';
 import { formatPrice } from '@/lib/helpers';
@@ -56,19 +56,19 @@ export default function CartDrawer() {
   const subtotal = isAuthenticated ? authSubtotal : guest.subtotal;
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const updateQuantity = (itemId: number, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     if (isAuthenticated) {
       dispatch(updateCartItemThunk({ itemId, quantity }));
     } else {
-      updateGuestCartQuantity(Math.abs(itemId), quantity);
+      updateGuestCartQuantity(fromGuestLineId(itemId), quantity);
       guest.refresh();
     }
   };
-  const remove = (itemId: number) => {
+  const remove = (itemId: string) => {
     if (isAuthenticated) {
       dispatch(removeCartItemThunk({ itemId }));
     } else {
-      removeFromGuestCart(Math.abs(itemId));
+      removeFromGuestCart(fromGuestLineId(itemId));
       guest.refresh();
     }
   };

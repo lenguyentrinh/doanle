@@ -7,12 +7,12 @@ import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 import { showToast } from '@/lib/toast';
 import { getOrderByIdAPI, type Order } from '@/features/orders/services/ordersAPI';
 import OrderConfirmation from '@/features/orders/components/OrderConfirmation';
+import { isObjectId } from '@/lib/helpers';
 
-// The backend `:id` is ParseIntPipe (MySQL INT). Same canonical-id guard as
-// products/[id]/page.tsx's isNumericId, duplicated locally (a 1-line check,
+// The backend `:id` is Mongo ObjectId. Same canonical-id guard as
+// products/[id]/page.tsx's isValidId, duplicated locally (a 1-line check,
 // not worth extracting for a single other caller).
-const isNumericId = (id: string) =>
-  /^[1-9]\d{0,9}$/.test(id) && Number(id) <= 2147483647;
+const isValidId = isObjectId; // route ids are Mongo ObjectIds
 
 type ViewState = 'loading' | 'ready' | 'not-found';
 
@@ -49,7 +49,7 @@ function extractErrorMessage(err: unknown): string {
 export default function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { isAuthenticated, authChecked } = useRequireAuth();
-  const validId = isNumericId(orderId);
+  const validId = isValidId(orderId);
   const [state, setState] = useState<ViewState>('loading');
   const [order, setOrder] = useState<Order | null>(null);
 
@@ -57,7 +57,7 @@ export default function OrderConfirmationPage() {
     if (!authChecked || !isAuthenticated || !validId) return;
 
     let cancelled = false;
-    getOrderByIdAPI(Number(orderId))
+    getOrderByIdAPI(orderId)
       .then((result) => {
         if (cancelled) return;
         if (!result || !PLACED_STATUSES.includes(result.status)) {

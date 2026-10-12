@@ -42,7 +42,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mode, setMode] = useState<'select' | 'new'>('new');
-  const [selectedId, setSelectedId] = useState<number | null>(initialAddress?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialAddress?.id ?? null);
 
   const {
     register,

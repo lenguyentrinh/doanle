@@ -32,7 +32,7 @@ export const fetchCartThunk = createAsyncThunk<CartView>(
 
 export const addCartItemThunk = createAsyncThunk<
   CartView,
-  { productId: number; quantity: number }
+  { productId: string; quantity: number }
 >("cart/add", async ({ productId, quantity }, { rejectWithValue }) => {
   try {
     return await addCartItemAPI(productId, quantity);
@@ -45,7 +45,7 @@ export const addCartItemThunk = createAsyncThunk<
 
 export const updateCartItemThunk = createAsyncThunk<
   CartView,
-  { itemId: number; quantity: number }
+  { itemId: string; quantity: number }
 >("cart/update", async ({ itemId, quantity }, { rejectWithValue }) => {
   try {
     return await updateCartItemAPI(itemId, quantity);
@@ -58,7 +58,7 @@ export const updateCartItemThunk = createAsyncThunk<
 
 export const removeCartItemThunk = createAsyncThunk<
   CartView,
-  { itemId: number }
+  { itemId: string }
 >("cart/remove", async ({ itemId }, { rejectWithValue }) => {
   try {
     return await removeCartItemAPI(itemId);

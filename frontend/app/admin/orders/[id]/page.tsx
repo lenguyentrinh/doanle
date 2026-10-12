@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { formatDate, formatPrice } from '@/lib/helpers';
+import { formatDate, formatPrice, isObjectId } from '@/lib/helpers';
 import { showToast } from '@/lib/toast';
 import {
   getAdminOrderByIdAPI,
@@ -17,10 +17,9 @@ import OrderStatusBadge from '@/features/orders/components/OrderStatusBadge';
 import OrderStatusTimeline from '@/features/orders/components/OrderStatusTimeline';
 import AdminConfirmDialog from '@/features/admin/components/AdminConfirmDialog';
 
-// The backend `:id` is ParseIntPipe (MySQL INT) — same numeric guard as the
+// The backend `:id` is Mongo ObjectId — same numeric guard as the
 // shopper order pages.
-const isNumericId = (id: string) =>
-  /^[1-9]\d{0,9}$/.test(id) && Number(id) <= 2147483647;
+const isValidId = isObjectId; // route ids are Mongo ObjectIds
 
 // Forward-only transition the admin can trigger from each status. Mirrors the
 // backend FORWARD_STATUSES contract exactly (pending → confirmed → shipped →
@@ -38,7 +37,7 @@ type ViewState = 'loading' | 'ready' | 'not-found';
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const validId = isNumericId(id);
+  const validId = isValidId(id);
   const [order, setOrder] = useState<AdminOrderDetail | null>(null);
   const [state, setState] = useState<ViewState>('loading');
   const [acting, setActing] = useState(false);
@@ -49,7 +48,7 @@ export default function AdminOrderDetailPage() {
       setState('not-found');
       return;
     }
-    getAdminOrderByIdAPI(Number(id))
+    getAdminOrderByIdAPI(id)
       .then((result) => {
         setOrder(result);
         setState('ready');

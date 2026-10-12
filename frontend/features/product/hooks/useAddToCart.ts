@@ -39,7 +39,7 @@ export function useAddToCart() {
   );
 
   const addToCart = useCallback(
-    async (productId: number, quantity = 1) => {
+    async (productId: string, quantity = 1) => {
       if (!isAuthenticated) {
         addToGuestCart(productId, quantity);
         showToast.success("Đã thêm vào giỏ! Xem giỏ hàng hoặc tiếp tục mua sắm.");

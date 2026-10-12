@@ -25,7 +25,7 @@ const MAX_IMAGES = 5;
 const EMPTY: ProductFormValues = {
   name: '',
   description: '',
-  categoryId: 0,
+  categoryId: '',
   price: 0,
   stockQuantity: 0,
   isActive: true,
@@ -56,7 +56,7 @@ interface ExistingImage {
 
 interface ProductFormProps {
   /** Product id to edit; null/absent = create mode. */
-  productId?: number | null;
+  productId?: string | null;
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string {
@@ -235,7 +235,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
 
   const name = values.name ?? '';
   const description = values.description ?? '';
-  const categoryId = values.categoryId ?? 0;
+  const categoryId = values.categoryId ?? '';
   const price = values.price ?? 0;
   const stockQuantity = values.stockQuantity ?? 0;
   const isActive = values.isActive ?? true;
@@ -259,7 +259,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
   const completionFields = [
     name.trim().length > 0,
     description.trim().length > 0,
-    categoryId > 0,
+    categoryId.length > 0,
     price > 0,
     stockQuantity > 0 || Boolean(touchedFields.stockQuantity),
     totalImages > 0,
@@ -369,7 +369,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                   </span>
                   <AdminSelect
                     options={[
-                      { value: 0, label: 'Chọn danh mục…' },
+                      { value: '', label: 'Chọn danh mục…' },
                       ...categories.map((c) => ({ value: c.id, label: c.name })),
                     ]}
                     value={categoryId}

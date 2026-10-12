@@ -3,7 +3,7 @@
 // backend/src/modules/products/products.service.ts (toResponse).
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number; // a NUMBER (backend ColumnNumericTransformer parses the MySQL DECIMAL)

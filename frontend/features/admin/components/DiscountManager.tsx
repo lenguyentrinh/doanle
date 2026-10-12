@@ -52,20 +52,20 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 // Admin bulk-discount picker (/admin/discounts). Search + category filter
 // narrow the visible list; picking a category auto-ticks every product in
 // it (fetched separately, uncapped by the visible page), but the checkbox
-// Set<number> itself is never reset by search/filter changes — selections
+// Set<string> itself is never reset by search/filter changes — selections
 // accumulate as the admin browses multiple categories, matching the UI
 // spec in OPTIMIZATION_AND_DISCOUNT_PLAN.md's "UI chọn sản phẩm áp dụng".
 export default function DiscountManager() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [categoryId, setCategoryId] = useState<string>('');
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [percentageInput, setPercentageInput] = useState('');
   const [applying, setApplying] = useState(false);
 
@@ -137,7 +137,7 @@ export default function DiscountManager() {
     };
   }, [categoryId]);
 
-  const toggle = (id: number) => {
+  const toggle = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -209,12 +209,12 @@ export default function DiscountManager() {
         </div>
         <AdminSelect
           options={[
-            { value: 0, label: 'Tất cả danh mục' },
+            { value: '', label: 'Tất cả danh mục' },
             ...categories.map((c) => ({ value: c.id, label: c.name })),
           ]}
-          value={categoryId || 0}
+          value={categoryId}
           onChange={(value) => {
-            setCategoryId(value || '');
+            setCategoryId(value);
             setPage(1);
           }}
           ariaLabel="Lọc theo danh mục"

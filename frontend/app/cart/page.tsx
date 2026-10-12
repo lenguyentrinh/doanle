@@ -17,7 +17,7 @@ import {
   selectCartError,
 } from '@/features/cart/store/cartSlice';
 import { useGuestCart } from '@/features/cart/hooks/useGuestCart';
-import { updateGuestCartQuantity, removeFromGuestCart } from '@/features/cart/lib/guestCart';
+import { updateGuestCartQuantity, removeFromGuestCart, fromGuestLineId } from '@/features/cart/lib/guestCart';
 import CartItemRow from '@/features/cart/components/CartItemRow';
 import CartSummary from '@/features/cart/components/CartSummary';
 import CartSkeleton from '@/features/cart/components/CartSkeleton';
@@ -114,18 +114,18 @@ export default function CartPage() {
     }
   }, [authChecked, isAuthenticated, authLoaded, dispatch]);
 
-  const handleUpdateQuantity = (itemId: number, quantity: number) =>
+  const handleUpdateQuantity = (itemId: string, quantity: number) =>
     dispatch(updateCartItemThunk({ itemId, quantity })).unwrap();
-  const handleRemove = (itemId: number) =>
+  const handleRemove = (itemId: string) =>
     dispatch(removeCartItemThunk({ itemId })).unwrap();
 
-  const guestHandleUpdateQuantity = (itemId: number, quantity: number) => {
-    updateGuestCartQuantity(Math.abs(itemId), quantity);
+  const guestHandleUpdateQuantity = (itemId: string, quantity: number) => {
+    updateGuestCartQuantity(fromGuestLineId(itemId), quantity);
     guest.refresh();
     return Promise.resolve();
   };
-  const guestHandleRemove = (itemId: number) => {
-    removeFromGuestCart(Math.abs(itemId));
+  const guestHandleRemove = (itemId: string) => {
+    removeFromGuestCart(fromGuestLineId(itemId));
     guest.refresh();
     return Promise.resolve();
   };

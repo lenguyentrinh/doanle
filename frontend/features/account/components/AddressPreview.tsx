@@ -18,7 +18,7 @@ import AddressFormModal from './AddressFormModal';
 export default function AddressPreview() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [formOpen, setFormOpen] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     getAddressesAPI()
@@ -36,12 +36,12 @@ export default function AddressPreview() {
     setEditId(null);
     setFormOpen(true);
   };
-  const openEdit = (id: number) => {
+  const openEdit = (id: string) => {
     setEditId(id);
     setFormOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteAddressAPI(id);
       setAddresses((prev) => prev.filter((a) => a.id !== id));
@@ -51,7 +51,7 @@ export default function AddressPreview() {
     }
   };
 
-  const handleSetDefault = async (id: number) => {
+  const handleSetDefault = async (id: string) => {
     try {
       const list = await setDefaultAddressAPI(id);
       setAddresses(list);

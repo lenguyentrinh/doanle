@@ -7,7 +7,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import AddressForm from './AddressForm';
 
 interface AddressFormModalProps {
-  addressId?: number | null;
+  addressId?: string | null;
   onClose: () => void;
   onSaved: () => void;
 }

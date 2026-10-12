@@ -12,7 +12,7 @@ import type {
 // header, same pattern as ordersAPI.ts.
 
 export interface RecentOrderSummary {
-  id: number;
+  id: string;
   customerName: string;
   status: OrderStatus;
   total: number;
@@ -21,7 +21,7 @@ export interface RecentOrderSummary {
 }
 
 export interface LowStockProductSummary {
-  id: number;
+  id: string;
   name: string;
   category: string;
   stockQuantity: number;
@@ -52,13 +52,13 @@ export const getAdminDashboardStatsAPI = async (): Promise<AdminDashboardStats> 
 // Admin product management (Story 5.2).
 
 export interface AdminProduct {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
   stockQuantity: number;
   category: string;
-  categoryId: number;
+  categoryId: string;
   imageKeys: string[];
   imageUrls: string[];
   createdAt: string;
@@ -86,7 +86,7 @@ export interface PaginatedAdminProducts {
 
 export const getAdminProductsAPI = async (params: {
   search?: string;
-  categoryId?: number;
+  categoryId?: string;
   page?: number;
   limit?: number;
 }): Promise<PaginatedAdminProducts> => {
@@ -103,7 +103,7 @@ export const getAdminProductsAPI = async (params: {
 // Admin category management.
 
 export interface AdminCategory {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   productCount: number;
@@ -148,7 +148,7 @@ export const createAdminCategoryAPI = async (
 };
 
 export const renameAdminCategoryAPI = async (
-  id: number,
+  id: string,
   name: string,
 ): Promise<AdminCategory> => {
   const res = await api.patch(`/api/admin/categories/${id}`, { name });
@@ -156,13 +156,13 @@ export const renameAdminCategoryAPI = async (
 };
 
 export const deleteAdminCategoryAPI = async (
-  id: number,
+  id: string,
 ): Promise<{ message: string }> => {
   const res = await api.delete(`/api/admin/categories/${id}`);
   return res.data as { message: string };
 };
 
-export const getAdminProductByIdAPI = async (id: number): Promise<AdminProduct> => {
+export const getAdminProductByIdAPI = async (id: string): Promise<AdminProduct> => {
   const res = await api.get(`/api/admin/products/${id}`);
   return (res.data as { data: AdminProduct }).data;
 };
@@ -170,7 +170,7 @@ export const getAdminProductByIdAPI = async (id: number): Promise<AdminProduct> 
 export interface ProductFormPayload {
   name: string;
   description: string;
-  categoryId: number;
+  categoryId: string;
   price: number;
   stockQuantity: number;
   isActive: boolean;
@@ -231,7 +231,7 @@ export const createAdminProductAPI = async (
 };
 
 export const updateAdminProductAPI = async (
-  id: number,
+  id: string,
   payload: ProductFormPayload,
 ): Promise<AdminProduct> => {
   const res = await api.patch(
@@ -244,7 +244,7 @@ export const updateAdminProductAPI = async (
 
 // Admin product soft delete / archive (Story 5.3).
 export const deleteAdminProductAPI = async (
-  id: number,
+  id: string,
 ): Promise<{ message: string }> => {
   const res = await api.delete(`/api/admin/products/${id}`);
   return res.data as { message: string };
@@ -259,7 +259,7 @@ export type AdminOrderSort = 'newest' | 'oldest';
 
 // Row shape returned by GET /api/admin/orders (AdminOrderSummary).
 export interface AdminOrderSummary {
-  id: number;
+  id: string;
   customerName: string;
   status: OrderStatus;
   total: number;
@@ -283,8 +283,8 @@ export interface PaginatedAdminOrders {
 // Detail shape from GET /api/admin/orders/:id (AdminOrderDetail): the shopper
 // detail fields plus admin-only customerEmail/customerPhone/paymentStatus.
 export interface AdminOrderDetail {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   status: OrderStatus;
   subtotal: number;
   shippingFee: number;
@@ -325,14 +325,14 @@ export const getAdminOrdersAPI = async (params: {
 
 // The detail endpoint wraps its payload in `{ data }` (unlike the list).
 export const getAdminOrderByIdAPI = async (
-  id: number,
+  id: string,
 ): Promise<AdminOrderDetail> => {
   const res = await api.get(`/api/admin/orders/${id}`);
   return (res.data as { data: AdminOrderDetail }).data;
 };
 
 export const updateAdminOrderStatusAPI = async (
-  id: number,
+  id: string,
   status: OrderStatus,
 ): Promise<{ message: string }> => {
   const res = await api.patch(`/api/admin/orders/${id}/status`, { status });
@@ -340,7 +340,7 @@ export const updateAdminOrderStatusAPI = async (
 };
 
 export const cancelAdminOrderAPI = async (
-  id: number,
+  id: string,
 ): Promise<{ message: string }> => {
   const res = await api.patch(`/api/admin/orders/${id}/cancel`);
   return res.data as { message: string };
@@ -349,7 +349,7 @@ export const cancelAdminOrderAPI = async (
 // Admin bulk discount (Discount manager, /admin/discounts). `null` clears
 // the discount for every listed product.
 export const bulkApplyDiscountAPI = async (
-  productIds: number[],
+  productIds: string[],
   discountPercentage: number | null,
 ): Promise<{ message: string; updatedCount: number }> => {
   const res = await api.patch('/api/admin/products/discount/bulk', {

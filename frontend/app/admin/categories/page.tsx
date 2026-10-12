@@ -47,10 +47,10 @@ export default function AdminCategoriesPage() {
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [savingId, setSavingId] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminCategory | null>(null);
 
   const [filterInput, setFilterInput] = useState('');
@@ -143,7 +143,7 @@ export default function AdminCategoriesPage() {
     setEditingName('');
   };
 
-  const handleRename = async (id: number) => {
+  const handleRename = async (id: string) => {
     const name = editingName.trim();
     if (!name || savingId !== null) return;
 

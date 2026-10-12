@@ -24,7 +24,7 @@ const EMPTY: AddressValues = {
 
 interface AddressFormProps {
   /** Address id to edit; null/undefined = add mode. */
-  addressId?: number | null;
+  addressId?: string | null;
   /** Called after a successful create/edit (e.g. close modal, refresh list). */
   onSuccess: () => void;
   /** Called when the user dismisses the form without saving. */

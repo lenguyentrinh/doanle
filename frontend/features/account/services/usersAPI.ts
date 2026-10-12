@@ -20,17 +20,17 @@ const createAddressAPI = async (data: AddressPayload) => {
   return res.data as Address;
 };
 
-const editAddressAPI = async (id: number, data: AddressPayload) => {
+const editAddressAPI = async (id: string, data: AddressPayload) => {
   const res = await api.patch("/api/users/addresses/" + id, data);
   return res.data as Address;
 };
 
-const setDefaultAddressAPI = async (id: number) => {
+const setDefaultAddressAPI = async (id: string) => {
   const res = await api.patch("/api/users/addresses/" + id + "/default");
   return res.data.data as Address[];
 };
 
-const deleteAddressAPI = async (id: number) => {
+const deleteAddressAPI = async (id: string) => {
   const res = await api.delete("/api/users/addresses/" + id);
   return res.data as ActionResponse;
 };

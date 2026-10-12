@@ -4,7 +4,7 @@
 
 // Sanitized current user — returned by GET /auth/me and PATCH /users/profile.
 export interface MeResponse {
-  id: number;
+  id: string;
   email: string;
   userName: string;
   phoneNumber: string | null;
@@ -18,7 +18,7 @@ export interface ProfilePayload {
 }
 
 export interface Address {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   street: string;

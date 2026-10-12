@@ -66,14 +66,14 @@ function statusPill(product: AdminProduct): { bg: string; fg: string; dot: strin
 export default function AdminProductsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [categoryId, setCategoryId] = useState<string>('');
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [archivingId, setArchivingId] = useState<number | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
   const [pendingArchive, setPendingArchive] = useState<AdminProduct | null>(null);
 
   // Whole-catalog counters for the stat strip — the backend computes these
@@ -93,7 +93,7 @@ export default function AdminProductsPage() {
   // isn't worth it for one query param.
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('categoryId');
-    if (fromUrl) setCategoryId(Number(fromUrl));
+    if (fromUrl) setCategoryId(fromUrl);
   }, []);
 
   // Plain 300ms debounce — SearchBar.tsx has no debounce to mirror (it's
@@ -222,12 +222,12 @@ export default function AdminProductsPage() {
           </div>
           <AdminSelect
             options={[
-              { value: 0, label: 'Tất cả danh mục' },
+              { value: '', label: 'Tất cả danh mục' },
               ...categories.map((c) => ({ value: c.id, label: c.name })),
             ]}
-            value={categoryId || 0}
+            value={categoryId}
             onChange={(value) => {
-              setCategoryId(value || '');
+              setCategoryId(value);
               setPage(1);
             }}
             ariaLabel="Lọc theo danh mục"

@@ -21,9 +21,9 @@ interface Props {
   items: CartLine[];
   subtotal: number;
   address: CheckoutAddress;
-  orderId: number | null;
+  orderId: string | null;
   idempotencyKey: string;
-  onOrderCreated: (orderId: number) => void;
+  onOrderCreated: (orderId: string) => void;
   onBack: () => void;
 }
 

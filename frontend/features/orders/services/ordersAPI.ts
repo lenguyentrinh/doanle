@@ -8,13 +8,13 @@ import { api } from '@/services/api';
 // 4.4 will extend this file with GET /api/orders (list).
 
 export interface CreateOrderPayload {
-  cartItems: { productId: number; quantity: number }[];
-  shippingAddressId: number;
+  cartItems: { productId: string; quantity: number }[];
+  shippingAddressId: string;
   idempotencyKey: string;
 }
 
 export interface CreateOrderResult {
-  orderId: number;
+  orderId: string;
 }
 
 export const createOrderAPI = async (
@@ -26,8 +26,8 @@ export const createOrderAPI = async (
 
 // Matches the Order/OrderItem entities' JSON shape (backend/src/modules/orders).
 export interface OrderItem {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productName: string;
   price: number;
   quantity: number;
@@ -51,8 +51,8 @@ export type OrderStatus =
   | 'cancelled';
 
 export interface Order {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   status: OrderStatus;
   subtotal: number;
   shippingFee: number;
@@ -101,7 +101,7 @@ export const getOrdersAPI = async (params: {
 // the confirmation page can render its own "Order not found" state; rethrows
 // on any other error (mirrors `productApi.ts`'s `getProduct` contract).
 export const getOrderByIdAPI = async (
-  orderId: number,
+  orderId: string,
 ): Promise<Order | null> => {
   try {
     const res = await api.get(`/api/orders/${orderId}`);

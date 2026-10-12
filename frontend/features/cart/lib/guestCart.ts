@@ -1,5 +1,12 @@
+// Guest cart lines have no server row id, so the UI line id is the product id
+// behind a prefix; it can never collide with a real cart_items ObjectId.
+const GUEST_LINE_PREFIX = 'guest-';
+export const toGuestLineId = (productId: string): string => `${GUEST_LINE_PREFIX}${productId}`;
+export const fromGuestLineId = (lineId: string): string =>
+  lineId.startsWith(GUEST_LINE_PREFIX) ? lineId.slice(GUEST_LINE_PREFIX.length) : lineId;
+
 export interface GuestCartItem {
-  productId: number;
+  productId: string;
   quantity: number;
 }
 
@@ -30,7 +37,7 @@ export function getGuestCart(): GuestCartItem[] {
       (item: unknown): item is GuestCartItem =>
         typeof item === 'object' &&
         item !== null &&
-        typeof (item as GuestCartItem).productId === 'number' &&
+        typeof (item as GuestCartItem).productId === 'string' &&
         typeof (item as GuestCartItem).quantity === 'number',
     );
   } catch {
@@ -48,7 +55,7 @@ function setGuestCart(items: GuestCartItem[]): void {
   }
 }
 
-export function addToGuestCart(productId: number, quantity: number, maxQuantity?: number): void {
+export function addToGuestCart(productId: string, quantity: number, maxQuantity?: number): void {
   const items = getGuestCart();
   const existing = items.find((i) => i.productId === productId);
   const current = existing ? existing.quantity : 0;
@@ -61,12 +68,12 @@ export function addToGuestCart(productId: number, quantity: number, maxQuantity?
   setGuestCart(items);
 }
 
-export function removeFromGuestCart(productId: number): void {
+export function removeFromGuestCart(productId: string): void {
   const items = getGuestCart().filter((i) => i.productId !== productId);
   setGuestCart(items);
 }
 
-export function updateGuestCartQuantity(productId: number, quantity: number, maxQuantity?: number): void {
+export function updateGuestCartQuantity(productId: string, quantity: number, maxQuantity?: number): void {
   if (quantity <= 0) {
     removeFromGuestCart(productId);
     return;

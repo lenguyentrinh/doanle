@@ -19,7 +19,7 @@ export default function AddToCartButton({
   disabled = false,
   className = '',
 }: {
-  productId: number;
+  productId: string;
   productName: string;
   disabled?: boolean;
   className?: string;

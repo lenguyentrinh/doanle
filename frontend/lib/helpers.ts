@@ -64,3 +64,7 @@ export function formatRelativeVi(iso: string, now: number = Date.now()): string 
   const days = Math.floor(hours / 24);
   return days === 1 ? 'hôm qua' : `${days} ngày trước`;
 }
+
+// Mongo ObjectId: exactly 24 hex chars. Used to guard route params so a
+// malformed id renders the branded 404 instead of hitting the backend.
+export const isObjectId = (id: string): boolean => /^[0-9a-fA-F]{24}$/.test(id);

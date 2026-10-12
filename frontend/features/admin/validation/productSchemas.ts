@@ -6,10 +6,7 @@ import { z } from 'zod';
 export const productSchema = z.object({
   name: z.string().min(1, 'Tên sản phẩm không được để trống'),
   description: z.string().min(1, 'Mô tả không được để trống'),
-  categoryId: z
-    .number({ error: 'Vui lòng chọn danh mục' })
-    .int('Vui lòng chọn danh mục')
-    .positive('Vui lòng chọn danh mục'),
+  categoryId: z.string().min(1, 'Vui lòng chọn danh mục'),
   price: z
     .number({ error: 'Giá không được để trống' })
     .positive('Giá phải lớn hơn 0'),
