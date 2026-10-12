@@ -33,7 +33,7 @@ function itemCount(order: Order): number {
 function OrderThumbCluster({ order }: { order: Order }) {
   const items = order.items.slice(0, 3);
   return (
-    <div className="flex h-16 w-[112px] shrink-0 items-center">
+    <div className="flex h-16 w-[84px] shrink-0 items-center sm:w-[112px]">
       {items.length <= 1 ? (
         <div className="relative h-16 w-[52px] overflow-hidden rounded-lg bg-fill">
           {items[0]?.productImageUrl && (
@@ -47,12 +47,12 @@ function OrderThumbCluster({ order }: { order: Order }) {
           )}
         </div>
       ) : (
-        <div className="flex items-center pl-3">
+        <div className="flex items-center pl-1 sm:pl-3">
           {items.map((item, i) => (
             <div
               key={item.id}
               style={{ zIndex: items.length - i }}
-              className={`relative aspect-[4/5] w-11 shrink-0 overflow-hidden rounded-md bg-fill ring-2 ring-white ${
+              className={`relative aspect-[4/5] w-9 shrink-0 sm:w-11 overflow-hidden rounded-md bg-fill ring-2 ring-white ${
                 i > 0 ? '-ml-4' : ''
               }`}
             >
@@ -85,13 +85,13 @@ export default function OrderHistoryList({ orders }: { orders: Order[] }) {
               // Subtle staggered entrance (capped so long lists don't drag);
               // collapses to static under prefers-reduced-motion via motion-safe:.
               style={{ animationDelay: `${Math.min(i, 6) * 60}ms` }}
-              className="group flex items-center gap-4 py-5 transition-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 motion-safe:animate-fade-up"
+              className="group flex items-center gap-3 py-5 transition-colors sm:gap-4 duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 motion-safe:animate-fade-up"
             >
               <OrderThumbCluster order={order} />
 
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-label-sm uppercase text-ink-muted">
+                  <p className="break-all text-label-sm uppercase text-ink-muted">
                     Đơn #{order.id}
                   </p>
                   <p className="mt-1 truncate text-product text-ink">
@@ -99,7 +99,7 @@ export default function OrderHistoryList({ orders }: { orders: Order[] }) {
                   </p>
                   <p className="mt-1 text-body-sm text-ink-muted">{formatDate(order.createdAt)}</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <span className="text-body-sm tabular-nums text-ink">
                     {formatPrice(order.total)}
                   </span>

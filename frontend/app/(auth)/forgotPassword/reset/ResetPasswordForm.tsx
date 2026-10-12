@@ -14,7 +14,7 @@ import { showToast } from "@/lib/toast";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/features/auth/validation/authSchemas";
 
 const passwordToggleClass =
-  "absolute right-0 bottom-[11px] text-[10px] font-[550] uppercase tracking-[0.2em] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2";
+  "absolute right-0 bottom-[11px] text-[10px] before:absolute before:-inset-x-2 before:-inset-y-3 before:content-[''] font-[550] uppercase tracking-[0.2em] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2";
 
 export default function ResetPasswordForm() {
   const dispatch = useDispatch<AppDispatch>();

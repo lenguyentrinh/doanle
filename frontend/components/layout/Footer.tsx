@@ -67,7 +67,7 @@ export default function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Địa chỉ email của bạn"
                 aria-label="Địa chỉ email của bạn"
-                className="h-12 w-full min-w-[240px] border-0 border-b border-white/25 bg-transparent px-1 text-body-md text-white outline-none placeholder:text-white/40 focus:border-accent-soft"
+                className="h-12 w-full min-w-0 border-0 sm:min-w-[240px] border-b border-white/25 bg-transparent px-1 text-body-md text-white outline-none placeholder:text-white/40 focus:border-accent-soft"
               />
               <button
                 type="submit"

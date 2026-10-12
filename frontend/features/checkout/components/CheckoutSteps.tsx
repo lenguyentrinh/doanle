@@ -22,7 +22,7 @@ export default function CheckoutSteps({ currentStep }: Props) {
         const active = i === currentStep;
         const done = i < currentStep;
         return (
-          <li key={label} className="relative z-10 flex flex-col items-center gap-2">
+          <li key={label} className="relative z-10 flex min-w-0 flex-col items-center gap-2">
             <span
               aria-hidden="true"
               className={`flex h-6 w-6 items-center justify-center rounded-full text-label-xs ${
@@ -37,7 +37,7 @@ export default function CheckoutSteps({ currentStep }: Props) {
             </span>
             <span
               aria-current={active ? 'step' : undefined}
-              className={`text-label-xs ${active || done ? 'text-ink' : 'text-ink-muted'}`}
+              className={`text-label-xs max-sm:tracking-[0.05em] ${active || done ? 'text-ink' : 'text-ink-muted'}`}
             >
               {label}
             </span>

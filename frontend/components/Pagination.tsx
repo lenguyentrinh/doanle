@@ -9,7 +9,7 @@ interface PaginationProps {
 }
 
 const btnBase =
-  'inline-flex min-h-12 items-center justify-center border border-ink bg-transparent px-6 py-2.5 text-label-sm text-ink transition-colors duration-200 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink';
+  'inline-flex min-h-12 items-center justify-center border border-ink bg-transparent px-4 py-2.5 sm:px-6 text-label-sm text-ink transition-colors duration-200 hover:bg-ink hover:text-paper focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink';
 
 export default function Pagination({ page, total, limit, onPageChange, buildHref }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -22,7 +22,7 @@ export default function Pagination({ page, total, limit, onPageChange, buildHref
   return (
     <nav
       aria-label="Phân trang"
-      className="flex items-center justify-between border-t mt-4 border-line pt-md"
+      className="flex items-center justify-between gap-2 border-t mt-4 border-line pt-md"
     >
       {buildHref ? (
         <>
@@ -43,7 +43,7 @@ export default function Pagination({ page, total, limit, onPageChange, buildHref
         </button>
       )}
 
-      <span className="text-label-sm text-ink-secondary">
+      <span className="text-center text-label-sm text-ink-secondary">
         Trang {page} / {totalPages}
       </span>
 

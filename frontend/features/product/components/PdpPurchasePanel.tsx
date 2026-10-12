@@ -66,7 +66,7 @@ export default function PdpPurchasePanel({
               disabled={status === 'adding'}
               aria-label={`Thêm ${productName} vào giỏ`}
               onClick={() => addToCart(productId, qty)}
-              className="min-h-[54px] flex-1 rounded-full bg-ink px-8 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-[54px] min-w-0 flex-1 rounded-full bg-ink px-5 sm:px-8 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {ctaLabel}
             </button>
@@ -94,7 +94,7 @@ export default function PdpPurchasePanel({
           globally as intended. */}
       {inStock && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/94 backdrop-blur-md motion-safe:animate-bar-in">
-          <div className="mx-auto flex max-w-[1480px] flex-wrap items-center gap-3.5 px-[clamp(16px,3.4vw,44px)] py-3">
+          <div className="mx-auto flex max-w-[1480px] items-center gap-3 px-[clamp(16px,3.4vw,44px)] py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:gap-3.5">
             {imageUrl && (
               <span
                 aria-hidden
@@ -102,8 +102,8 @@ export default function PdpPurchasePanel({
                 style={{ backgroundImage: `url(${imageUrl})` }}
               />
             )}
-            <span className="flex min-w-[120px] flex-1 flex-col gap-0.5">
-              <span className="font-display text-[16px] font-medium text-ink">{productName}</span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate font-display text-[16px] font-medium text-ink">{productName}</span>
               <span className="text-[12px] text-ink-muted">
                 SL {qty} · {formatPrice(price)}
               </span>
@@ -113,7 +113,7 @@ export default function PdpPurchasePanel({
               disabled={status === 'adding'}
               aria-label={`Thêm ${productName} vào giỏ`}
               onClick={() => addToCart(productId, qty)}
-              className="min-h-[46px] rounded-full bg-accent px-7 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-[46px] shrink-0 rounded-full bg-accent px-5 sm:px-7 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
             >
               Thêm vào giỏ
             </button>

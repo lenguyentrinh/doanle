@@ -91,7 +91,7 @@ export default function LoginForm() {
               setTagEmail(getValues("email") ?? "");
               setTagOpen(true);
             }}
-            className="text-[12.5px] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="-my-2 py-2 text-[12.5px] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Quên mật khẩu?
           </button>
@@ -108,7 +108,7 @@ export default function LoginForm() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-              className="absolute right-0 bottom-[11px] text-[10px] font-[550] uppercase tracking-[0.2em] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="absolute right-0 bottom-[11px] text-[10px] before:absolute before:-inset-x-2 before:-inset-y-3 before:content-[''] font-[550] uppercase tracking-[0.2em] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               {showPassword ? "Ẩn" : "Hiện"}
             </button>

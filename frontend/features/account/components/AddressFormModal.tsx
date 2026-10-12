@@ -50,7 +50,7 @@ export default function AddressFormModal({
   }, [onClose]);
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-md">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-md">
       <div
         className="absolute inset-0 bg-ink/40"
         aria-hidden="true"
@@ -68,14 +68,14 @@ export default function AddressFormModal({
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute right-md top-md z-10 flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition-colors duration-200 hover:bg-fill hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 sm:right-md sm:top-md sm:h-8 sm:w-8 items-center justify-center rounded-full text-ink-muted transition-colors duration-200 hover:bg-fill hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <FiX size={20} />
         </button>
         {/* Scroll lives here, not on the bordered box: the modal sizes to its
             content and only this region scrolls when content truly exceeds the
             capped height. min-h-0 lets it shrink inside the flex column. */}
-        <div className="min-h-0 overflow-y-auto p-8">
+        <div className="min-h-0 overflow-y-auto p-5 sm:p-8">
           <AddressForm
             addressId={addressId}
             onSuccess={onSaved}

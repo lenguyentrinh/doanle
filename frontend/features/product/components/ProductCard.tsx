@@ -106,8 +106,8 @@ export default function ProductCard({ product, compact = false }: { product: Pro
         >
           <h3 title={product.name} className={`truncate text-product text-ink ${compact ? 'text-[17px]' : 'text-[19px] leading-[1.28]'}`}>{product.name}</h3>
         </Link>
-        <div className="mt-[3px] flex items-baseline justify-between gap-2.5 border-t border-line pt-2.5">
-          <p className="flex items-baseline gap-2">
+        <div className="mt-[3px] flex flex-wrap items-baseline justify-between gap-x-2.5 gap-y-1 border-t border-line pt-2.5">
+          <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
             <span className={`font-display text-[19px] font-medium tabular-nums ${hasDiscount ? 'text-accent' : 'text-ink'}`}>
               {formatPrice(hasDiscount ? product.finalPrice : product.price)}
             </span>

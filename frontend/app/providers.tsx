@@ -75,6 +75,7 @@ export default function Providers({
           // style prop takes real CSS values, not Tailwind classes) — keep in
           // sync with globals.css by hand if the palette changes again.
           style: {
+            maxWidth: "calc(100vw - 32px)",
             background: "#3f3128",
             color: "#ffffff",
             borderRadius: "9999px",

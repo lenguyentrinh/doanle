@@ -316,7 +316,7 @@ export default function HomeHeroManager() {
             <button
               type="button"
               onClick={() => resetTo(lastSaved.current)}
-              className={`${buttonSecondary} min-h-[46px] px-[22px]`}
+              className={`${buttonSecondary} min-h-[46px] px-[22px] max-sm:w-full`}
             >
               Hoàn tác
             </button>
@@ -324,7 +324,7 @@ export default function HomeHeroManager() {
           <button
             type="submit"
             disabled={isSubmitting || uploading !== null}
-            className={`${buttonPrimary} min-h-[46px] px-[26px]`}
+            className={`${buttonPrimary} min-h-[46px] px-[26px] max-sm:w-full`}
           >
             {isSubmitting ? 'Đang lưu' : 'Lưu thay đổi'}
           </button>

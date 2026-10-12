@@ -32,7 +32,7 @@ function CartShell({
 }) {
   return (
     <div className="bg-paper">
-      <section className="mx-auto w-full max-w-[1400px] px-5 py-12 lg:px-10 lg:py-16">
+      <section className="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-5 sm:py-12 lg:px-10 lg:py-16">
         <header className="mb-8 border-b border-line pb-5 md:mb-10">
           <h1 className="text-display-lg text-ink">Giỏ hàng</h1>
           {count > 0 && (
@@ -52,7 +52,7 @@ function CartShell({
 function CartError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="bg-paper">
-      <section className="mx-auto w-full max-w-[1400px] px-5 py-12 lg:px-10 lg:py-16">
+      <section className="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-5 sm:py-12 lg:px-10 lg:py-16">
         <h1 className="mb-8 text-display-lg text-ink">Giỏ hàng</h1>
         <div className="flex flex-col items-center gap-5 py-20 text-center">
           <p className="text-body-md text-ink-muted">
@@ -61,7 +61,7 @@ function CartError({ onRetry }: { onRetry: () => void }) {
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Thử lại
           </button>
@@ -85,7 +85,7 @@ function EmptyCart() {
       </div>
       <Link
         href="/"
-        className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         Mua sắm ngay
       </Link>
@@ -146,7 +146,7 @@ export default function CartPage() {
         {authItems.length === 0 ? (
           <EmptyCart />
         ) : (
-          <div className="grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-16">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
             <div className="divide-y divide-line">
               {authItems.map((line, i) => (
                 <CartItemRow
@@ -180,7 +180,7 @@ export default function CartPage() {
       {guest.items.length === 0 ? (
         <EmptyCart />
       ) : (
-        <div className="grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-16">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
           <div className="divide-y divide-line">
             {guest.items.map((line, i) => (
               <CartItemRow

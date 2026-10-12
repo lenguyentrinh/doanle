@@ -40,7 +40,7 @@ export default function AccountShell({
     <>
       <UnifiedLayoutContent isAdmin={isAdmin}>
         {/* Mobile account nav: the rail is desktop-only, so nav survives below md */}
-        <nav className="mb-lg flex items-center gap-lg border-b border-line pb-sm md:hidden">
+        <nav className="mb-lg flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line pb-sm md:hidden">
           <Link href="/account" aria-current={onProfile ? 'page' : undefined} className={railLink(onProfile)}>
             Hồ sơ
           </Link>

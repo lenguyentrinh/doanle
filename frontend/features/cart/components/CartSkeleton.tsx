@@ -7,7 +7,7 @@ export default function CartSkeleton() {
       <section
         role="status"
         aria-label="Đang tải giỏ hàng"
-        className="mx-auto w-full max-w-[1400px] px-5 py-16 lg:px-10 lg:py-24"
+        className="mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-5 sm:py-16 lg:px-10 lg:py-24"
       >
         <span className="sr-only">Đang tải…</span>
         <div className="mb-10 border-b border-line pb-6 md:mb-14">
@@ -15,10 +15,10 @@ export default function CartSkeleton() {
           <div className="mt-3 h-4 w-20 bg-fill motion-safe:animate-pulse" />
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-16">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
           <div className="divide-y divide-line" aria-hidden="true">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="grid grid-cols-[auto_1fr] gap-5 py-7 first:pt-0 sm:gap-7">
+              <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 py-7 first:pt-0 sm:gap-7">
                 <div className="aspect-[3/4] w-20 shrink-0 rounded-sm bg-fill motion-safe:animate-pulse sm:w-24" />
                 <div className="flex flex-col">
                   <div className="h-4 w-2/3 bg-fill motion-safe:animate-pulse" />

@@ -105,7 +105,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
             {addresses.map((a) => (
               <label
                 key={a.id}
-                className={`flex cursor-pointer flex-col gap-1 rounded-[12px] border bg-white p-5 transition-colors duration-200 ${
+                className={`flex min-w-0 cursor-pointer flex-col gap-1 break-words rounded-[12px] border bg-white p-4 sm:p-5 transition-colors duration-200 ${
                   selectedId === a.id ? 'border-accent bg-fill' : 'border-line hover:border-line-strong'
                 }`}
               >
@@ -129,7 +129,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
           <button
             type="button"
             onClick={() => setMode('new')}
-            className="w-fit border-b border-line-strong pb-0.5 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="-my-2 w-fit border-b border-line-strong py-2 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Thêm địa chỉ mới
           </button>
@@ -191,7 +191,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
               <button
                 type="button"
                 onClick={() => setMode('select')}
-                className="w-fit border-b border-line pb-0.5 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="-my-2 w-fit border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Dùng địa chỉ đã lưu
               </button>

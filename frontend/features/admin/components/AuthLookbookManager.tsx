@@ -161,7 +161,7 @@ export default function AuthLookbookManager() {
           <button
             type="submit"
             disabled={isSubmitting || uploading}
-            className={`${buttonPrimary} min-h-[46px] px-[26px]`}
+            className={`${buttonPrimary} min-h-[46px] px-[26px] max-sm:w-full`}
           >
             {isSubmitting ? 'Đang lưu' : 'Lưu thay đổi'}
           </button>

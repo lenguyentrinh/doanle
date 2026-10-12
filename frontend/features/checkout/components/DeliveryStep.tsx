@@ -21,7 +21,7 @@ export default function DeliveryStep({ onContinue }: Props) {
 
       <label className="flex cursor-default items-center gap-3 rounded-[12px] border border-accent bg-fill px-5 py-4">
         <input type="radio" checked readOnly className="h-[18px] w-[18px] accent-accent" />
-        <span className="flex flex-col">
+        <span className="flex min-w-0 flex-col">
           <span className="text-body-sm text-ink">Tiêu chuẩn — 3–5 ngày</span>
           <span className="text-body-sm text-ink-muted">{formatPrice(SHIPPING_FEE)}</span>
         </span>

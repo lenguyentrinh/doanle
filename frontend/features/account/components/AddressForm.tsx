@@ -115,7 +115,7 @@ export default function AddressForm({
     <>
       <h2
         id={titleId}
-        className="mb-md border-b border-line pb-3 text-headline-sm text-ink"
+        className="mb-md border-b border-line pb-3 pr-10 text-headline-sm text-ink"
       >
         {isEditing ? 'Sửa địa chỉ' : 'Thêm địa chỉ'}
       </h2>
@@ -162,10 +162,10 @@ export default function AddressForm({
           {...register('city')}
         />
 
-        <label className="flex items-center gap-sm">
+        <label className="flex min-h-10 items-center gap-sm">
           <input
             type="checkbox"
-            className="h-4 w-4 accent-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="h-4 w-4 shrink-0 accent-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             disabled={isLoading}
             {...register('isDefault')}
           />

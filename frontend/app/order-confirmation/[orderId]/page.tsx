@@ -93,7 +93,7 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="bg-paper">
-      <section className="mx-auto w-full max-w-[720px] px-5 py-16 lg:px-10 lg:py-24">
+      <section className="mx-auto w-full max-w-[720px] px-5 py-10 sm:py-16 lg:px-10 lg:py-24">
         {effectiveState === 'ready' && order ? (
           <OrderConfirmation order={order} />
         ) : (
@@ -107,7 +107,7 @@ export default function OrderConfirmationPage() {
             </p>
             <Link
               href="/"
-              className="mt-4 inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="mt-4 inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               Về trang chủ
             </Link>

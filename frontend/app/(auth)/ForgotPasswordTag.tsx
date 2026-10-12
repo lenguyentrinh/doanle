@@ -149,7 +149,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
         aria-modal="true"
         aria-labelledby="tag-title"
         style={{ width: TAG_WIDTH, marginLeft: `calc(${TAG_WIDTH} / -2)` }}
-        className={`fixed left-1/2 top-10 z-[51] origin-top md:top-16 motion-reduce:animate-none ${
+        className={`fixed left-1/2 top-6 z-[51] sm:top-10 origin-top md:top-16 motion-reduce:animate-none ${
           leaving ? "motion-safe:animate-tag-up" : "motion-safe:animate-tag-drop"
         }`}
       >
@@ -164,7 +164,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
           />
 
           <div
-            className="relative bg-auth-ground px-10 pb-[30px] pt-[66px]"
+            className="relative bg-auth-ground px-6 pb-[30px] pt-[66px] sm:px-10"
             style={{
               clipPath:
                 "polygon(64px 0, calc(100% - 64px) 0, 100% 64px, 100% 100%, 0 100%, 0 64px)",
@@ -184,7 +184,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
               onMouseDown={keepFocus}
               onClick={requestClose}
               aria-label="Đóng"
-              className="absolute right-[26px] top-[66px] z-10 grid size-8 place-items-center rounded-full border border-line-strong text-ink-secondary transition-colors duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="absolute right-3 top-[60px] z-10 grid size-10 sm:right-[26px] sm:top-[66px] sm:size-8 place-items-center rounded-full border border-line-strong text-ink-secondary transition-colors duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               <span aria-hidden className="text-[16px] leading-none">
                 ×
@@ -202,7 +202,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
 
               <h2
                 id="tag-title"
-                className="m-0 mb-3 font-display text-[46px] font-normal leading-[1.06] tracking-[-0.025em] text-ink"
+                className="m-0 mb-3 font-display text-[36px] sm:text-[46px] font-normal leading-[1.06] tracking-[-0.025em] text-ink"
               >
                 Quên <em className="italic text-accent">mật khẩu</em>
               </h2>
@@ -246,7 +246,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
                   type="button"
                   onMouseDown={keepFocus}
                   onClick={goToLogin}
-                  className="italic font-medium text-accent underline decoration-accent-soft underline-offset-4 transition-colors duration-200 hover:text-accent-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 text-right"
+                  className="italic font-medium text-accent underline decoration-accent-soft underline-offset-4 transition-colors duration-200 hover:text-accent-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 py-2 text-right"
                 >
                   Đăng nhập
                 </button>

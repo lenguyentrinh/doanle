@@ -37,7 +37,7 @@ export default function EmailField({ email, label = 'Email', id = 'email' }: Ema
   }, [email]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <label htmlFor={id} className="text-label-xs text-ink-secondary">
         {label}
       </label>

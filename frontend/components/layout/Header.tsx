@@ -100,11 +100,11 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/86 shadow-header backdrop-blur-[16px] backdrop-saturate-[1.4]">
-      <div className="relative mx-auto flex h-[76px] max-w-[1480px] items-center justify-between gap-8 px-[clamp(16px,3.4vw,44px)]">
+      <div className="relative mx-auto flex h-[76px] max-w-[1480px] items-center justify-between gap-3 px-[clamp(16px,3.4vw,44px)] sm:gap-8">
         {/* Brand (left) — tracked serif wordmark, the quiet logo */}
         <Link
           href="/"
-          className="font-display text-[24px] uppercase tracking-[0.32em] text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="font-display text-[20px] uppercase tracking-[0.24em] sm:text-[24px] sm:tracking-[0.32em] text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           Oren
         </Link>
@@ -133,8 +133,8 @@ export default function Header() {
         </nav>
 
         {/* Utility: search + icons (right) */}
-        <div className="flex shrink-0 items-center justify-end gap-6">
-          <SearchBar className="w-32 sm:w-44 lg:w-[150px] xl:w-52" />
+        <div className="flex min-w-0 items-center justify-end gap-1 sm:shrink-0 sm:gap-6">
+          <SearchBar className="mr-2 w-24 min-w-0 sm:mr-0 sm:w-44 lg:w-[150px] xl:w-52" />
           <button
             type="button"
             onClick={openCartDrawer}

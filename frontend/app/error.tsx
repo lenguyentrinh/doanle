@@ -110,7 +110,7 @@ export default function Error({
               </div>
               <span aria-hidden className="h-px w-full bg-line" />
               {error.message ? (
-                <p className="text-pretty text-caption text-ink-secondary">{error.message}</p>
+                <p className="break-words text-pretty text-caption text-ink-secondary">{error.message}</p>
               ) : (
                 <p className="text-pretty text-caption text-ink-secondary">
                   Chi tiết lỗi đã được ẩn ở môi trường production — dùng mã lỗi bên trên để tra cứu.

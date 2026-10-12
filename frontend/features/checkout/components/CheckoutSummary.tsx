@@ -15,7 +15,7 @@ export default function CheckoutSummary({ subtotal }: Props) {
   const taxPercent = Math.round(TAX_RATE * 100);
 
   return (
-    <aside className="flex h-fit flex-col gap-6 rounded-2xl bg-fill p-8 lg:sticky lg:top-28">
+    <aside className="flex h-fit flex-col gap-6 rounded-2xl bg-fill p-5 sm:p-8 lg:sticky lg:top-28">
       <h2 className="text-label-xs text-ink-secondary">Tổng đơn hàng</h2>
 
       <dl className="flex flex-col gap-4">

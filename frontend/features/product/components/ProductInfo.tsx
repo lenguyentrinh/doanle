@@ -45,9 +45,9 @@ export default function ProductInfo({ product }: { product: Product }) {
     <div className="flex flex-col gap-6 lg:pl-2">
       <div className="flex flex-col gap-3">
         <span className="text-label-xs text-accent">{product.category}</span>
-        <h1 className="text-display-md text-ink">{product.name}</h1>
+        <h1 className="text-display-md text-ink [overflow-wrap:anywhere]">{product.name}</h1>
         <div className="flex flex-wrap items-center gap-3.5">
-          <p className="flex items-baseline gap-3">
+          <p className="flex flex-wrap items-baseline gap-x-3">
             <span className={`text-headline-md tabular-nums ${hasDiscount ? 'text-accent' : 'text-ink'}`}>
               {formatPrice(hasDiscount ? product.finalPrice : product.price)}
             </span>

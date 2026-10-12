@@ -20,7 +20,7 @@ export default function OrderHistoryListSkeleton({
               <div className="h-3 w-24 rounded-sm bg-fill" />
               <div className="h-3 w-36 rounded-sm bg-fill" />
             </div>
-            <div className="flex items-center gap-4">
+            <div className="hidden items-center gap-4 sm:flex">
               <div className="h-3 w-16 rounded-sm bg-fill" />
               <div className="h-6 w-28 rounded-full bg-fill" />
             </div>

@@ -72,12 +72,12 @@ export default function AddressPreview() {
         {addresses.map((a) => (
           <div
             key={a.id}
-            className={`flex min-h-[180px] flex-col justify-between rounded-[12px] border bg-white p-6 transition-colors duration-200 ${
+            className={`flex min-h-[180px] min-w-0 flex-col justify-between break-words rounded-[12px] border bg-white p-5 sm:p-6 transition-colors duration-200 ${
               a.isDefault ? 'border-accent' : 'border-line hover:border-line-strong'
             }`}
           >
             <div>
-              <div className="mb-sm flex items-center justify-between">
+              <div className="mb-sm flex items-center justify-between gap-3">
                 {a.isDefault ? (
                   <span className="inline-flex w-fit items-center rounded-full bg-accent px-3 py-1 text-label-xs text-white">
                     Mặc định
@@ -90,7 +90,7 @@ export default function AddressPreview() {
                     type="button"
                     onClick={() => openEdit(a.id)}
                     aria-label={`Sửa địa chỉ ${a.street}`}
-                    className="border-b border-line-strong pb-0.5 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="-my-2 border-b border-line-strong py-2 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                   >
                     Sửa
                   </button>
@@ -98,7 +98,7 @@ export default function AddressPreview() {
                     type="button"
                     onClick={() => handleDelete(a.id)}
                     aria-label={`Xoá địa chỉ ${a.street}`}
-                    className="border-b border-line-strong pb-0.5 text-label-xs text-ink-secondary transition-all duration-200 hover:border-error hover:text-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="-my-2 border-b border-line-strong py-2 text-label-xs text-ink-secondary transition-all duration-200 hover:border-error hover:text-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                   >
                     Xoá
                   </button>
@@ -117,7 +117,7 @@ export default function AddressPreview() {
               <button
                 type="button"
                 onClick={() => handleSetDefault(a.id)}
-                className="mt-sm w-fit text-left text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="-my-2 mt-sm w-fit py-2 text-left text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Đặt làm mặc định
               </button>

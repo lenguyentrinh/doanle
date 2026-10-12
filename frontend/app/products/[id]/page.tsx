@@ -83,17 +83,17 @@ export default async function ProductDetailPage({
   return (
     <div className="pb-[140px]">
       <section className="mx-auto w-full max-w-[1480px] px-[clamp(16px,3.4vw,44px)] py-[clamp(18px,2.6vw,34px)]">
-        <div className="flex items-center gap-2 text-caption text-ink-muted">
-          <Link href="/products" className="transition-colors duration-200 hover:text-accent">
+        <div className="flex min-w-0 items-center gap-2 text-caption text-ink-muted">
+          <Link href="/products" className="shrink-0 transition-colors duration-200 hover:text-accent">
             Cửa hàng
           </Link>
           <span aria-hidden>·</span>
-          <span className="text-ink">{product.name}</span>
+          <span className="min-w-0 truncate text-ink">{product.name}</span>
         </div>
 
         <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-start gap-[clamp(24px,4vw,72px)]">
           <ProductGallery images={product.imageUrls} productName={product.name} />
-          <div className="lg:sticky lg:top-[104px]">
+          <div className="min-w-0 lg:sticky lg:top-[104px]">
             <ProductInfo product={product} />
           </div>
         </div>

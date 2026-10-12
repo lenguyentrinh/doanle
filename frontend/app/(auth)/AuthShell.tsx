@@ -19,7 +19,7 @@ export function Spinner() {
 }
 
 const footerLinkClass =
-  "italic font-medium text-accent underline decoration-accent-soft underline-offset-4 transition-colors duration-200 hover:text-accent-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2";
+  "inline-block py-1 italic font-medium text-accent underline decoration-accent-soft underline-offset-4 transition-colors duration-200 hover:text-accent-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2";
 
 // Centered line under the submit button used by every screen except login
 // (which gets the signup CTA card instead) and verify-email (which has two
@@ -66,7 +66,7 @@ function StepIndicator({ step, totalSteps }: { step: number; totalSteps: number 
 }
 
 const legalLinkClass =
-  "text-[10px] font-[550] uppercase tracking-[0.18em] text-ink-muted transition-colors duration-200 hover:text-accent";
+  "py-2 text-[10px] font-[550] uppercase tracking-[0.18em] text-ink-muted transition-colors duration-200 hover:text-accent";
 
 // Shared "magazine cover" layout for every pre-auth screen (login, signup,
 // verify-email, forgot-password steps): flat cream ground, arch-framed
@@ -98,34 +98,34 @@ export default function AuthShell({
 }) {
   return (
     <div className="relative flex min-h-screen min-h-dvh flex-col overflow-hidden bg-auth-ground">
-      <span
-        aria-hidden
-        className="pointer-events-none fixed -left-10 bottom-[-0.33em] z-0 select-none font-display text-[clamp(220px,34vw,430px)] font-light italic leading-none tracking-[-0.04em] text-fill-dark"
-      >
-        Oren
-      </span>
+      {/* Clip box: the oversized watermark must never widen the page. */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <span className="absolute -left-10 bottom-[-0.33em] select-none whitespace-nowrap font-display text-[clamp(220px,34vw,430px)] font-light italic leading-none tracking-[-0.04em] text-fill-dark">
+          Oren
+        </span>
+      </div>
 
       <header className="relative z-[2] flex items-center justify-between gap-4 px-5 py-5 md:px-[clamp(24px,4.4vw,56px)] md:py-4">
         <Link href="/" className="font-display text-[20px] uppercase tracking-[0.34em] text-ink">
           Oren
         </Link>
-        <div className="flex items-center gap-7">
+        <div className="flex items-center gap-4 sm:gap-7">
           <span className="hidden font-display text-[14px] italic text-ink-muted md:inline">Thu — Đông 2026</span>
           <Link
             href="/"
-            className="border-b border-line-strong pb-[3px] text-[10px] font-[550] uppercase tracking-[0.22em] text-ink transition-colors duration-200 hover:text-accent"
+            className="inline-flex min-h-10 items-center border-b border-line-strong text-[10px] font-[550] uppercase tracking-[0.22em] text-ink transition-colors duration-200 hover:text-accent"
           >
             Cửa hàng
           </Link>
         </div>
       </header>
 
-      <main className="relative z-[1] mx-auto grid w-full max-w-[1280px] flex-1 grid-cols-1 items-center px-5 pb-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-[clamp(32px,7vw,124px)] md:px-[clamp(24px,4.4vw,56px)] md:pb-6 md:pt-0">
+      <main className="relative z-[1] mx-auto grid min-w-0 w-full max-w-[1280px] flex-1 grid-cols-1 items-center px-5 pb-8 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-[clamp(32px,7vw,124px)] md:px-[clamp(24px,4.4vw,56px)] md:pb-6 md:pt-0">
         <div className="sticky top-8 hidden w-full max-w-[440px] justify-self-end md:block">
           <AuthLookbookFrame />
         </div>
 
-        <div className="w-full max-w-[470px] justify-self-center pt-3 md:justify-self-start md:pt-6">
+        <div className="w-full min-w-0 max-w-[470px] justify-self-center pt-3 md:justify-self-start md:pt-6">
           <div className={RISE}>
             {step && totalSteps ? (
               <StepIndicator step={step} totalSteps={totalSteps} />
@@ -134,10 +134,10 @@ export default function AuthShell({
             )}
             {title && (
               <h1
-                className={`m-0 mb-3.5 text-balance font-display font-normal leading-[1.06] tracking-[-0.03em] text-ink [&_em]:italic [&_em]:text-accent ${
+                className={`m-0 mb-3.5 text-balance break-words font-display font-normal leading-[1.06] tracking-[-0.03em] text-ink [&_em]:italic [&_em]:text-accent ${
                   titleBreak
-                    ? "text-[52px] md:text-[76px] [&_em]:block"
-                    : "text-[44px] md:text-[60px]"
+                    ? "text-[44px] min-[380px]:text-[52px] md:text-[76px] [&_em]:block"
+                    : "text-[38px] min-[380px]:text-[44px] md:text-[60px]"
                 }`}
               >
                 {title}

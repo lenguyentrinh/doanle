@@ -21,7 +21,7 @@ export default function StitchLine() {
       {stitches.map((s, i) => (
         <span
           key={i}
-          className={`block shrink-0 origin-center rounded-full motion-safe:animate-stitch-in motion-reduce:animate-none ${s.color}`}
+          className={`block origin-center rounded-full motion-safe:animate-stitch-in motion-reduce:animate-none ${s.color}`}
           style={{ width: s.width, height: s.height, animationDelay: `${s.delay}ms` }}
         />
       ))}

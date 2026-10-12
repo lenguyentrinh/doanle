@@ -40,7 +40,7 @@ export default function PaymentStep({ subtotal, onContinue }: Props) {
             readOnly
           />
           <FiTruck aria-hidden="true" size={18} className="shrink-0 text-ink" />
-          <span className="flex flex-col">
+          <span className="flex min-w-0 flex-col">
             <span className="text-body-sm text-ink">Thanh toán khi nhận hàng (COD)</span>
             <span className="text-body-sm text-ink-muted">Trả tiền mặt cho shipper khi nhận hàng</span>
           </span>

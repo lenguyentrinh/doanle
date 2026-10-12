@@ -65,14 +65,14 @@ export default function ProfileSection() {
   };
 
   return (
-    <section className="motion-safe:animate-account-rise rounded-2xl bg-fill p-8">
+    <section className="motion-safe:animate-account-rise rounded-2xl bg-fill p-5 sm:p-8">
       <div className="mb-md flex items-baseline justify-between">
         <h2 className="text-headline-sm text-ink">Hồ sơ</h2>
         {!editing && (
           <button
             type="button"
             onClick={startEdit}
-            className="border-b border-line-strong pb-0.5 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="-my-2 border-b border-line-strong py-2 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Sửa
           </button>
@@ -122,7 +122,7 @@ export default function ProfileSection() {
           </button>
 
           {editing && (
-            <div className="flex gap-sm">
+            <div className="flex w-full flex-wrap gap-sm sm:w-auto">
               <button
                 type="button"
                 onClick={cancelEdit}
@@ -134,7 +134,7 @@ export default function ProfileSection() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-full bg-ink px-8 sm:flex-none py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
               </button>

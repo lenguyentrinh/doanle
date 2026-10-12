@@ -98,18 +98,18 @@ export default function ReviewStep({
                 className="object-cover"
               />
             </div>
-            <div className="flex-1">
-              <p className="text-body-sm text-ink">{line.product.name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="break-words text-body-sm text-ink">{line.product.name}</p>
               <p className="text-body-sm text-ink-muted">Số lượng {line.quantity}</p>
             </div>
-            <p className="text-body-sm tabular-nums text-ink">
+            <p className="flex-none text-body-sm tabular-nums text-ink">
               {formatPrice((line.product.discountPercentage ? line.product.finalPrice : line.product.price) * line.quantity)}
             </p>
           </div>
         ))}
       </div>
 
-      <div>
+      <div className="min-w-0 break-words">
         <h3 className="mb-1 text-label-xs text-ink-secondary">Giao đến</h3>
         <p className="text-body-sm text-ink">
           {address.firstName} {address.lastName}
@@ -129,7 +129,7 @@ export default function ReviewStep({
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="w-fit border-b border-line pb-0.5 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+          className="-my-2 w-fit border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Quay lại
         </button>

@@ -222,7 +222,7 @@ export default async function ProductsPage({
   return (
     <section className="mx-auto w-full max-w-[1480px] px-[clamp(16px,3.4vw,44px)] pb-[clamp(64px,8vw,110px)]">
       {/* Breadcrumb — quiet wayfinding above the display heading */}
-      <nav aria-label="Điều hướng breadcrumb" className="flex items-center gap-2 pt-[26px] text-[12.5px] text-ink-muted">
+      <nav aria-label="Điều hướng breadcrumb" className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-[26px] text-[12.5px] text-ink-muted [overflow-wrap:anywhere]">
         <Link href="/" className="transition-colors duration-200 hover:text-accent">
           Trang chủ
         </Link>
@@ -250,12 +250,12 @@ export default async function ProductsPage({
 
       {/* Page header — full width, above the sidebar+content split */}
       <div className="mt-6 flex flex-col gap-6 border-b border-line-strong pb-[26px] md:flex-row md:items-end md:justify-between">
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex min-w-0 flex-col gap-[14px]">
           <span className="flex items-center gap-2.5 text-label-xs text-accent">
             <span aria-hidden="true" className="h-px w-[26px] bg-accent" />
             Chào mừng đến Oren
           </span>
-          <h1 className="font-display text-[clamp(34px,5.2vw,62px)] font-medium leading-none tracking-[-0.022em] text-ink">
+          <h1 className="font-display text-[clamp(34px,5.2vw,62px)] font-medium leading-none [overflow-wrap:anywhere] tracking-[-0.022em] text-ink">
             {heading}
           </h1>
         </div>
@@ -271,7 +271,7 @@ export default async function ProductsPage({
       </div>
 
       {/* Sidebar (248px) | content (1fr) */}
-      <div className="mt-8 md:grid md:grid-cols-[248px_1fr] md:items-start md:gap-x-[44px]">
+      <div className="mt-8 md:grid md:grid-cols-[248px_minmax(0,1fr)] md:items-start md:gap-x-[44px]">
         {/* Refine panel — desktop only; mobile gets the bottom sheet below */}
         <div className="hidden md:block">
           <ProductFilters
@@ -302,7 +302,7 @@ export default async function ProductsPage({
                 <Link
                   key={chip.key}
                   href={chip.href}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line-strong px-[15px] py-2 text-[12.5px] text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  className="inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-full border border-line-strong px-[15px] py-2 text-[12.5px] [overflow-wrap:anywhere] text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   {chip.label}
                   <FiX aria-hidden="true" size={10} className="text-ink-muted" />
@@ -310,7 +310,7 @@ export default async function ProductsPage({
               ))}
               <Link
                 href="/products"
-                className="text-[12.5px] text-accent transition-colors duration-200 hover:text-accent-strong"
+                className="inline-flex min-h-10 items-center text-[12.5px] text-accent transition-colors duration-200 hover:text-accent-strong"
               >
                 Xoá tất cả
               </Link>

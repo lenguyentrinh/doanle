@@ -41,7 +41,7 @@ export default function OrderStatusBadge({
   compact?: boolean;
 }) {
   const { label, className, dotClassName } = STATUS_CONFIG[status];
-  const sizing = compact ? 'w-auto px-[11px] tracking-[.18em]' : 'w-[168px] px-3';
+  const sizing = compact ? 'w-auto px-[11px] tracking-[.18em]' : 'w-auto px-3 sm:w-[168px]';
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full py-1 text-label-xs ${sizing} ${className}`}

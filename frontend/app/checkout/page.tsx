@@ -48,14 +48,14 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-paper">
-      <section className="mx-auto w-full px-5 py-12 lg:px-10 lg:py-16">
+      <section className="mx-auto w-full px-5 py-8 sm:py-12 lg:px-10 lg:py-16">
         <header className="mb-10 border-b border-line pb-6">
           <h1 className="mb-6 text-display-lg text-ink">Thanh toán</h1>
           <CheckoutSteps currentStep={flow.step} />
         </header>
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:gap-14">
-          <div>
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14">
+          <div className="min-w-0">
             {flow.step === 0 && (
               <ShippingStep
                 initialAddress={flow.address}

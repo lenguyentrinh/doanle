@@ -36,7 +36,7 @@ function timestampFor(order: Order, key: TimelineStep): string | null {
 export default function OrderStatusTimeline({ order }: { order: Order }) {
   if (order.status === 'cancelled') {
     return (
-      <div className="rounded-[12px] border border-line p-6">
+      <div className="rounded-[12px] border border-line p-4 sm:p-6">
         <p className="text-label-sm text-error-strong">Đơn hàng đã bị hủy</p>
       </div>
     );
@@ -58,12 +58,12 @@ export default function OrderStatusTimeline({ order }: { order: Order }) {
     <div className="relative flex items-start">
       <span
         aria-hidden="true"
-        className="absolute left-0 right-0 top-[8px] h-px bg-line"
+        className="absolute left-[12.5%] right-[12.5%] top-[8px] h-px bg-line"
       />
       <span
         aria-hidden="true"
-        className="absolute left-0 top-[8px] h-px bg-accent transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
-        style={{ width: `${progressPct}%` }}
+        className="absolute left-[12.5%] top-[8px] h-px bg-accent transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{ width: `${progressPct * 0.75}%` }}
       />
       <ol className="relative flex w-full flex-wrap justify-between gap-y-4">
         {STEPS.map((step, i) => {
@@ -72,7 +72,7 @@ export default function OrderStatusTimeline({ order }: { order: Order }) {
           return (
             <li
               key={step.key}
-              className="flex min-w-[76px] flex-1 flex-col items-center gap-3 text-center"
+              className="flex min-w-0 flex-1 sm:min-w-[76px] flex-col items-center gap-3 text-center"
             >
               <span
                 aria-hidden="true"
@@ -89,12 +89,12 @@ export default function OrderStatusTimeline({ order }: { order: Order }) {
               <div className="flex flex-col gap-1">
                 <span
                   aria-current={completed && i === currentIndex ? 'step' : undefined}
-                  className={`text-label-sm ${completed ? 'text-ink' : 'text-ink-muted'}`}
+                  className={`text-label-sm max-sm:text-[10px] max-sm:tracking-[0.08em] ${completed ? 'text-ink' : 'text-ink-muted'}`}
                 >
                   {step.label}
                 </span>
                 {completed && timestamp && (
-                  <span className="text-body-sm text-ink-muted">{formatDate(timestamp)}</span>
+                  <span className="break-words text-caption text-ink-muted sm:text-body-sm">{formatDate(timestamp)}</span>
                 )}
               </div>
             </li>

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 export default function CurrentPathLabel() {
   const pathname = usePathname();
   return (
-    <span className="text-[12px] leading-[1.5] tracking-[0.04em] text-ink-muted">
+    <span className="max-w-full break-all text-center text-[12px] leading-[1.5] tracking-[0.04em] text-ink-muted">
       Đường dẫn bạn vừa mở: {pathname}
     </span>
   );

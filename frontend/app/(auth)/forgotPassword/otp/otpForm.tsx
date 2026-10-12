@@ -70,7 +70,7 @@ export default function OtpForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-x-6 gap-y-[22px] md:grid-cols-2 [&>*]:col-span-full" noValidate>
       {email && (
         <p className="rounded-xl bg-fill px-4 py-3 text-[13.5px] leading-[1.5] text-ink-secondary">
-          Đã gửi mã tới <span className="font-semibold text-ink">{email}</span>
+          Đã gửi mã tới <span className="break-all font-semibold text-ink">{email}</span>
         </p>
       )}
 
@@ -92,7 +92,7 @@ export default function OtpForm() {
         type="button"
         onClick={handleResend}
         disabled={resending || cooldown > 0 || !email}
-        className="self-start text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+        className="self-start py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {resending
           ? "Đang gửi lại..."

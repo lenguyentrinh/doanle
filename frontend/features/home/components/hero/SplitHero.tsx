@@ -15,7 +15,7 @@ export default function SplitHero({
   bestSeller?: Product;
 }) {
   return (
-    <section className="relative grid min-h-[clamp(560px,calc(100vh-124px),760px)] grid-cols-1 items-stretch pt-8 scroll-mt-3 [scroll-snap-align:start] lg:grid-cols-[1.05fr_1fr] lg:items-center">
+    <section className="relative grid overflow-x-clip min-h-[clamp(560px,calc(100vh-124px),760px)] grid-cols-1 items-stretch pt-8 scroll-mt-3 [scroll-snap-align:start] lg:grid-cols-[1.05fr_1fr] lg:items-center">
       <span className="pointer-events-none absolute bottom-24 left-[34px] z-[5] hidden origin-bottom-left -rotate-90 whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.32em] text-ink-muted lg:block">
         Thu 2026 — Tuyển chọn hàng tuần
       </span>

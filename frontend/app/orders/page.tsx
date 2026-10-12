@@ -108,7 +108,7 @@ export default function OrdersPage() {
               <span className="text-label-xs text-accent">Lịch sử mua</span>
               <h1 className="mt-2 text-display-lg text-ink">Đơn hàng</h1>
             </div>
-            <dl className="flex gap-8">
+            <dl className="flex gap-6 sm:gap-8">
               {[
                 { key: 'total', label: 'Tổng đơn', value: statsOrders.length },
                 { key: 'shipped', label: 'Đang giao', value: countByStatus(statsOrders, 'shipped') },
@@ -134,7 +134,7 @@ export default function OrdersPage() {
                   setPage(1);
                 }}
                 aria-pressed={filter === tab.value}
-                className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                className={`relative flex items-center gap-2 min-h-10 rounded-full px-4 py-2 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 ${
                   filter === tab.value ? 'bg-accent text-white' : 'bg-fill text-ink-secondary hover:text-ink'
                 }`}
               >
@@ -161,7 +161,7 @@ export default function OrdersPage() {
               </p>
               <Link
                 href="/"
-                className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Mua sắm ngay
               </Link>
@@ -179,7 +179,7 @@ export default function OrdersPage() {
           <AdminPagination page={page} total={total} limit={DEFAULT_PAGE_LIMIT} onPageChange={setPage} />
         )}
 
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-fill px-8 py-6">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-fill px-5 py-5 sm:px-8 sm:py-6">
           <div className="flex flex-col gap-1">
             <span className="text-headline-sm text-ink">Cần hỗ trợ một đơn?</span>
             <span className="text-body-sm text-ink-secondary">
@@ -188,7 +188,7 @@ export default function OrdersPage() {
           </div>
           <a
             href="mailto:hello@oren.store"
-            className="text-body-sm text-accent transition-colors duration-200 hover:text-accent-strong"
+            className="break-all text-body-sm text-accent transition-colors duration-200 hover:text-accent-strong"
           >
             hello@oren.store
           </a>

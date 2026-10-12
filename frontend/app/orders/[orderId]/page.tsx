@@ -79,10 +79,10 @@ export default function OrderDetailPage() {
           {/* Cream editorial header band (spec lines 992-1016): back link,
               order no/date + headline on the left, grand total right-aligned. */}
           <div className="border-b border-line bg-fill">
-            <div className="mx-auto w-full py-10 lg:py-14 px-6">
+            <div className="mx-auto w-full py-8 sm:py-10 lg:py-14 px-4 sm:px-6">
               <Link
                 href="/orders"
-                className="inline-flex items-center gap-2 text-body-sm text-ink-muted transition-colors duration-200 hover:text-accent"
+                className="inline-flex min-h-10 items-center gap-2 text-body-sm text-ink-muted transition-colors duration-200 hover:text-accent"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M19 12H6" />
@@ -94,7 +94,7 @@ export default function OrderDetailPage() {
               <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-label-sm uppercase tabular-nums text-ink-muted">
+                    <span className="break-all text-label-sm uppercase tabular-nums text-ink-muted">
                       Đơn #{order.id}
                     </span>
                     <span aria-hidden="true" className="hidden h-px w-3.5 bg-line-strong sm:block" />
@@ -133,7 +133,7 @@ export default function OrderDetailPage() {
             </p>
             <Link
               href="/orders"
-              className="mt-4 inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="mt-4 inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               Về danh sách đơn hàng
             </Link>

@@ -98,7 +98,7 @@ export default function SliderHero({ hero }: { hero: HomeHero }) {
                 aria-label={`Chuyển đến ảnh ${i + 1}`}
                 aria-current={i === index}
                 onClick={() => go(i)}
-                className={`h-2.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                className={`relative h-2.5 rounded-full before:absolute before:-inset-2.5 before:content-[''] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                   i === index ? 'w-7 bg-white' : 'w-2.5 bg-white/55 hover:bg-white/80'
                 }`}
               />

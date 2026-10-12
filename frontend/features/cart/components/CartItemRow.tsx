@@ -67,7 +67,7 @@ export default function CartItemRow({
     <article
       // Staggered fade-up on mount; dropped when removing so the exit fade wins.
       style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}
-      className={`group grid grid-cols-[auto_1fr] gap-5 py-5 transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] first:pt-0 sm:gap-7 ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)] gap-4 py-5 transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] first:pt-0 sm:gap-7 ${
         removing ? 'opacity-0' : 'opacity-100 motion-safe:animate-account-rise'
       }`}
     >
@@ -89,7 +89,7 @@ export default function CartItemRow({
             <h3 className="truncate text-product leading-snug text-ink">
               {product.name}
             </h3>
-            <p className="flex items-baseline gap-2">
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className={`text-body-sm tabular-nums ${hasDiscount ? 'text-accent' : 'text-ink-secondary'}`}>
                 {formatPrice(hasDiscount ? product.finalPrice : product.price)}
               </span>
@@ -99,7 +99,7 @@ export default function CartItemRow({
                 </span>
               )}
               {hasDiscount && (
-                <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-white">
+                <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-white">
                   −{product.discountPercentage}%
                 </span>
               )}
@@ -124,14 +124,14 @@ export default function CartItemRow({
             onClick={remove}
             disabled={busy || removing}
             aria-label={`Xoá ${product.name} khỏi giỏ`}
-            className="flex h-8 w-8 shrink-0 items-center justify-center text-ink-muted transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:opacity-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center text-ink-muted md:h-8 md:w-8 transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:opacity-50"
           >
             <FiX size={16} aria-hidden="true" />
           </button>
         </div>
 
         {/* Quantity stepper + line total, anchored to the row baseline */}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
           {!oos ? (
             <div className="inline-flex items-center overflow-hidden rounded-sm border border-line bg-surface shadow-xs">
               <button
@@ -139,12 +139,12 @@ export default function CartItemRow({
                 onClick={() => changeQuantity(displayQty - 1)}
                 disabled={busy || removing || atMin}
                 aria-label={`Giảm số lượng ${product.name}`}
-                className="flex h-9 w-9 items-center justify-center text-ink transition-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="flex h-10 w-10 items-center justify-center text-ink transition md:h-9 md:w-9-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <FiMinus size={14} aria-hidden="true" />
               </button>
               <span
-                className="w-9 text-center text-body-sm tabular-nums text-ink"
+                className="w-8 text-center text-body-sm tabular-nums text-ink sm:w-9"
                 aria-live="polite"
               >
                 {displayQty}
@@ -154,7 +154,7 @@ export default function CartItemRow({
                 onClick={() => changeQuantity(displayQty + 1)}
                 disabled={busy || removing || atMax}
                 aria-label={`Tăng số lượng ${product.name}`}
-                className="flex h-9 w-9 items-center justify-center text-ink transition-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="flex h-10 w-10 items-center justify-center text-ink transition md:h-9 md:w-9-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <FiPlus size={14} aria-hidden="true" />
               </button>

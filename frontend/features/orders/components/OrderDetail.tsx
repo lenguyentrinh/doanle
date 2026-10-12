@@ -25,7 +25,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
   const { addToCart, status } = useAddToCart();
   return (
     <li className="flex items-stretch gap-4 border-t border-line py-5 first:border-t-0">
-      <div className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-lg bg-fill sm:w-28">
+      <div className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-lg bg-fill sm:w-28">
         {item.productImageUrl && (
           <Image
             src={item.productImageUrl}
@@ -38,7 +38,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 py-1">
         <div>
-          <p className="text-product text-ink">{item.productName}</p>
+          <p className="break-words text-product text-ink">{item.productName}</p>
           <p className="mt-1 text-body-sm text-ink-muted">Số lượng {item.quantity}</p>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -46,7 +46,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
             type="button"
             onClick={() => addToCart(item.productId, 1)}
             disabled={status === 'adding'}
-            className="border-b border-line-strong pb-0.5 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className="-my-2 border-b border-line-strong py-2 text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             {status === 'adding' ? 'Đang thêm…' : 'Mua lại'}
           </button>
@@ -60,8 +60,8 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 export default function OrderDetail({ order }: { order: Order }) {
   return (
     <div className="grid grid-cols-1 items-start gap-6 motion-safe:animate-fade-up lg:grid-cols-[1.6fr_1fr]">
-      <div className="flex flex-col gap-5">
-        <section aria-label="Trạng thái đơn hàng" className="rounded-[18px] border border-line bg-white p-7">
+      <div className="flex min-w-0 flex-col gap-5">
+        <section aria-label="Trạng thái đơn hàng" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
           <h2 className="mb-5 font-display text-[18px] text-ink">Trạng thái đơn hàng</h2>
           <OrderStatusTimeline order={order} />
           <p className="mt-4 text-caption text-ink-muted">
@@ -69,7 +69,7 @@ export default function OrderDetail({ order }: { order: Order }) {
           </p>
         </section>
 
-        <section aria-label="Sản phẩm" className="rounded-[18px] border border-line bg-white p-7">
+        <section aria-label="Sản phẩm" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
           <h2 className="mb-2 font-display text-[18px] text-ink">Sản phẩm</h2>
           <ul>
             {order.items.map((item) => (
@@ -78,10 +78,10 @@ export default function OrderDetail({ order }: { order: Order }) {
           </ul>
         </section>
 
-        <div className="grid grid-cols-2 gap-5">
-          <section aria-label="Địa chỉ giao hàng" className="rounded-[18px] border border-line bg-white p-7">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <section aria-label="Địa chỉ giao hàng" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
             <h2 className="mb-2.5 font-display text-[16px] text-ink">Giao đến</h2>
-            <address className="flex flex-col gap-0.5 text-body-sm not-italic text-ink-secondary">
+            <address className="flex flex-col gap-0.5 break-words text-body-sm not-italic text-ink-secondary">
               <span>
                 {order.shippingAddress.firstName} {order.shippingAddress.lastName}
               </span>
@@ -93,7 +93,7 @@ export default function OrderDetail({ order }: { order: Order }) {
 
           <section
             aria-label="Hỗ trợ"
-            className="flex flex-col justify-center gap-2.5 rounded-[18px] bg-fill p-7"
+            className="flex flex-col justify-center gap-2.5 rounded-[18px] bg-fill p-5 sm:p-7"
           >
             <h2 className="font-display text-[16px] text-ink">Cần hỗ trợ?</h2>
             <p className="text-body-sm text-ink-secondary">
@@ -101,7 +101,7 @@ export default function OrderDetail({ order }: { order: Order }) {
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="w-fit border-b border-line-strong pb-0.5 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="-my-2 w-fit border-b border-line-strong py-2 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
             >
               Liên hệ hỗ trợ
             </a>
@@ -111,7 +111,7 @@ export default function OrderDetail({ order }: { order: Order }) {
 
       <section
         aria-label="Hoá đơn"
-        className="sticky top-9 flex flex-col gap-3 rounded-[18px] border border-line bg-white p-6"
+        className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-9 rounded-[18px] border border-line bg-white p-5 sm:p-6"
       >
         <span className="text-label-xs text-ink-secondary">Hoá đơn</span>
         <div className="flex justify-between text-body-sm text-ink-secondary">

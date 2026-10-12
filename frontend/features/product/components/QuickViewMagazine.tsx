@@ -12,7 +12,7 @@ function MagazineTitle({ name, className }: { name: string; className: string })
   const head = words.slice(0, -2).join(' ');
   const tail = words.slice(-2).join(' ');
   return (
-    <h2 className={`font-display font-normal leading-[1.02] tracking-[-0.03em] text-ink text-balance ${className}`}>
+    <h2 className={`font-display font-normal leading-[1.02] tracking-[-0.03em] text-ink text-balance [overflow-wrap:anywhere] ${className}`}>
       {head}
       {head && ' '}
       <em className="italic text-accent">{tail}</em>
@@ -129,7 +129,7 @@ export default function QuickViewMagazine({ product, index, total, onClose, onSt
           <MagazineTitle name={product.name} className="mt-2 text-[38px]" />
           <div className="mt-4 text-[15.5px]">{quote('line-clamp-3')}</div>
           <div className="mt-auto flex flex-col gap-3.5 pt-6">
-            <div className="flex items-baseline gap-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <PriceText product={product} className="text-[24px]" />
               <OldPrice product={product} />
               <span className={`ml-auto text-[12px] ${stock.cls}`}>{stock.label}</span>

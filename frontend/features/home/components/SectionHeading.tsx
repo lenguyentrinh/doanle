@@ -16,9 +16,9 @@ export default function SectionHeading({
   headingId?: string;
 }) {
   return (
-    <div className="relative flex items-end justify-between gap-6 border-b border-line-strong pb-5">
+    <div className="relative flex flex-wrap items-end justify-between gap-3 border-b border-line-strong pb-5">
       <span aria-hidden className="absolute bottom-[-1px] left-0 h-px w-[72px] bg-accent" />
-      <div className="flex items-baseline gap-5">
+      <div className="flex min-w-0 items-baseline gap-3 sm:gap-5">
         {num && (
           <span
             aria-hidden
@@ -34,7 +34,7 @@ export default function SectionHeading({
           {title}
         </h2>
       </div>
-      {right && <div className="flex items-baseline gap-[22px] pb-1.5">{right}</div>}
+      {right && <div className="flex shrink-0 items-baseline gap-[22px] pb-1.5">{right}</div>}
     </div>
   );
 }

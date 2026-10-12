@@ -26,19 +26,19 @@ export default function OrderConfirmation({ order }: Props) {
         Cảm ơn, <em className="text-accent">{firstName}</em>
       </h1>
       <p className="max-w-[46ch] text-body-md text-ink-secondary">
-        Đơn <span className="text-ink">#{order.id}</span> đang được chuẩn bị. Email xác nhận sẽ
+        Đơn <span className="break-all text-ink">#{order.id}</span> đang được chuẩn bị. Email xác nhận sẽ
         được gửi kèm mã vận đơn ngay khi hàng rời kho.
       </p>
 
-      <div className="w-full max-w-[500px] rounded-2xl bg-fill p-6">
+      <div className="w-full max-w-[500px] rounded-2xl bg-fill p-4 sm:p-6">
         <OrderStatusTimeline order={order} />
       </div>
 
       <div className="mx-auto w-full max-w-[500px] divide-y divide-line border-y border-line text-left">
         {order.items.map((item) => (
           <div key={item.id} className="flex items-center justify-between gap-4 py-3">
-            <div>
-              <p className="text-body-sm text-ink">{item.productName}</p>
+            <div className="min-w-0">
+              <p className="break-words text-body-sm text-ink">{item.productName}</p>
               <p className="text-body-sm text-ink-muted">Số lượng {item.quantity}</p>
             </div>
             <p className="text-body-sm tabular-nums text-ink">
@@ -67,7 +67,7 @@ export default function OrderConfirmation({ order }: Props) {
         </div>
       </dl>
 
-      <div className="mx-auto w-full max-w-[500px] text-left">
+      <div className="mx-auto w-full max-w-[500px] break-words text-left">
         <h2 className="mb-1 text-label-xs text-ink-secondary">Giao đến</h2>
         <p className="text-body-sm text-ink">
           {address.firstName} {address.lastName}

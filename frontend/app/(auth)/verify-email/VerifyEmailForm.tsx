@@ -58,7 +58,7 @@ export default function VerifyEmailForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-x-6 gap-y-[22px] md:grid-cols-2 [&>*]:col-span-full">
       {email && (
         <p className="rounded-xl bg-fill px-4 py-3 text-[13.5px] leading-[1.5] text-ink-secondary">
-          Đã gửi mã 6 số tới <span className="font-semibold text-ink">{email}</span>
+          Đã gửi mã 6 số tới <span className="break-all font-semibold text-ink">{email}</span>
         </p>
       )}
 
@@ -81,19 +81,19 @@ export default function VerifyEmailForm() {
         {verifyEmailLoading && <Spinner />}
       </Button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-x-4">
         <button
           type="button"
           onClick={handleResend}
           disabled={resending}
-          className="text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+          className="py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {resending ? 'Đang gửi lại...' : 'Gửi lại mã'}
         </button>
         <button
           type="button"
           onClick={() => router.push('/login')}
-          className="text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           Huỷ
         </button>

@@ -24,7 +24,7 @@ export default function CartSummary({ subtotal, hasOutOfStock = false }: Props) 
   return (
     // Elevated summary panel: hairline border, rounded surface, resting card
     // shadow. Sticks alongside the scrolling item list on desktop.
-    <aside className="flex h-fit flex-col gap-7 rounded-2xl bg-fill p-8 lg:sticky lg:top-28">
+    <aside className="flex h-fit flex-col gap-7 rounded-2xl bg-fill p-5 sm:p-8 lg:sticky lg:top-28">
       <h2 className="text-headline-md text-ink">Tóm tắt đơn</h2>
 
       <FreeShippingProgress subtotal={subtotal} />

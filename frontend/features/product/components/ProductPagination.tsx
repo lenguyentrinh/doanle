@@ -41,7 +41,7 @@ export default function ProductPagination({
   const tokens = buildPageTokens(page, totalPages);
 
   const pillBase =
-    'inline-flex h-[42px] min-w-[42px] items-center justify-center rounded-full px-3 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2';
+    'inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2';
 
   return (
     <nav
@@ -52,7 +52,7 @@ export default function ProductPagination({
         Hiển thị {rangeStart}–{rangeEnd} trên {total} thiết kế
       </p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         {page > 1 ? (
           <Link
             href={buildProductsHref({ ...current, page: page - 1 })}

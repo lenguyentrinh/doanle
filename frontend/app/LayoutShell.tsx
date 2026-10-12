@@ -20,7 +20,7 @@ export default function LayoutShell({
     <CartDrawerProvider>
       <QuickViewProvider>
         <ScrollProgressBar />
-        <div className="flex min-h-screen flex-col bg-paper">
+        <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
           <ConditionalTicker />
           <ConditionalHeader />
           <main className="flex flex-1 flex-col">{children}</main>

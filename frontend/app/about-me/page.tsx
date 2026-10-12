@@ -28,7 +28,7 @@ const VALUES = [
 export default function AboutMePage() {
   return (
     <div className="motion-safe:animate-fade-up">
-      <section className="mx-auto max-w-[1000px] px-5 py-24 text-center lg:px-10">
+      <section className="mx-auto max-w-[1000px] px-5 py-14 text-center sm:py-24 lg:px-10">
         <span className="text-label-xs text-accent">Về Oren</span>
         <h1 className="mt-3 text-display-lg text-ink">
           Ít hơn, nhưng <em className="text-accent">kỹ hơn</em>
@@ -45,8 +45,8 @@ export default function AboutMePage() {
         </div>
       </section>
 
-      <section className="mx-auto px-5 py-24 lg:px-10">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-3">
+      <section className="mx-auto px-5 py-14 sm:py-24 lg:px-10">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-12">
           {VALUES.map((v) => (
             <div key={v.num} className="flex flex-col gap-3">
               <span className="font-display italic text-accent">{v.num}</span>
@@ -57,8 +57,8 @@ export default function AboutMePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1000px] px-5 pb-24 lg:px-10">
-        <div className="flex flex-col items-center gap-6 rounded-[18px] bg-fill px-8 py-16 text-center">
+      <section className="mx-auto max-w-[1000px] px-5 pb-14 sm:pb-24 lg:px-10">
+        <div className="flex flex-col items-center gap-6 rounded-[18px] bg-fill px-5 py-12 text-center sm:px-8 sm:py-16">
           <h2 className="text-display-md text-ink">
             Bắt đầu với một món bạn sẽ mặc trăm lần
           </h2>
