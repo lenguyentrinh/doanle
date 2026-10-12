@@ -1,14 +1,8 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Index,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import { ColumnNumericTransformer } from '../../../common/utils/column-numeric.transformer';
-import { OrderItem } from './order-item.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
+import { OrderItem, OrderItemSchema } from './order-item.entity';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -18,7 +12,7 @@ export enum OrderStatus {
   CANCELLED = 'cancelled',
 }
 
-// JSON snapshot of the user's owned saved address (Story 1.5 shape).
+// Snapshot of the user's owned saved address (Story 1.5 shape).
 export interface ShippingAddressSnapshot {
   firstName: string;
   lastName: string;
@@ -26,93 +20,90 @@ export interface ShippingAddressSnapshot {
   city: string;
 }
 
-@Entity('orders')
-@Index('idx_orders_user_id', ['userId'])
-@Index('idx_orders_status_created_at', ['status', 'createdAt'])
-@Index('idx_orders_confirmed_at', ['confirmedAt'])
+@Schema({ collection: 'orders', timestamps: true })
 export class Order {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column({ name: 'user_id' })
-  userId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  userId!: Types.ObjectId;
 
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  @Prop({
+    type: String,
+    enum: Object.values(OrderStatus),
+    default: OrderStatus.PENDING,
+  })
   status!: OrderStatus;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ required: true })
   subtotal!: number;
 
-  @Column({
-    name: 'shipping_fee',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 30000,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ default: 30000 })
   shippingFee!: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ required: true })
   tax!: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ required: true })
   total!: number;
 
-  @Column({ name: 'shipping_address', type: 'json' })
+  @Prop({
+    type: {
+      firstName: String,
+      lastName: String,
+      street: String,
+      city: String,
+    },
+    _id: false,
+    required: true,
+  })
   shippingAddress!: ShippingAddressSnapshot;
 
   // Payment reference from an external gateway. Unused under the current
   // Cash-on-Delivery model (payment is collected by the courier on delivery),
   // so it stays null; retained as the seam a future online gateway would fill.
-  @Column({
-    name: 'payment_reference',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
+  @Prop({ type: String, maxlength: 255, default: null })
   paymentReference!: string | null;
 
-  @Column({ name: 'idempotency_key', type: 'varchar', length: 255 })
+  @Prop({ type: String, required: true, maxlength: 255 })
   idempotencyKey!: string;
 
   // Per-status-transition timestamps for the order-detail status timeline
   // (Story 4.4). All start null on a freshly placed (pending) order and are
   // stamped as an admin advances the order forward
   // (confirmed→shipped→delivered) via updateOrderStatus.
-  @Column({ name: 'confirmed_at', type: 'timestamp', nullable: true })
+  @Prop({ type: Date, default: null })
   confirmedAt!: Date | null;
 
-  @Column({ name: 'shipped_at', type: 'timestamp', nullable: true })
+  @Prop({ type: Date, default: null })
   shippedAt!: Date | null;
 
-  @Column({ name: 'delivered_at', type: 'timestamp', nullable: true })
+  @Prop({ type: Date, default: null })
   deliveredAt!: Date | null;
 
-  // cascade so persisting an Order also inserts its OrderItems in the same
-  // save (createOrder builds `items` in-memory and saves the parent). Without
-  // this, the order saves but order_items stays empty.
-  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
+  // Items are embedded in the order document (they're only ever read/written
+  // with their order), so the old order_items table's CASCADE is implicit.
+  @Prop({ type: [OrderItemSchema], default: [] })
   items!: OrderItem[];
 
-  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }
+
+export type OrderDocument = HydratedDocument<Order>;
+export const OrderSchema = applyJsonTransform(
+  SchemaFactory.createForClass(Order),
+);
+OrderSchema.index({ userId: 1 }, { name: 'idx_orders_user_id' });
+OrderSchema.index(
+  { status: 1, createdAt: 1 },
+  { name: 'idx_orders_status_created_at' },
+);
+OrderSchema.index({ confirmedAt: 1 }, { name: 'idx_orders_confirmed_at' });
+OrderSchema.index(
+  { userId: 1, idempotencyKey: 1 },
+  { unique: true, name: 'uq_orders_user_idempotency_key' },
+);
+OrderSchema.index(
+  { 'items.productId': 1 },
+  { name: 'idx_order_items_product_id' },
+);

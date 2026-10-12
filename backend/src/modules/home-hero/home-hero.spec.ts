@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/require-await -- test doubles */
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/require-await -- test doubles */
 import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
@@ -29,11 +29,13 @@ const dto = (template: UpdateHomeHeroDto['template'], n: number) =>
 
 function makeService() {
   let row: any = null;
-  const repo = {
-    findOne: jest.fn(async () => row),
-    findOneOrFail: jest.fn(async () => row),
-    create: jest.fn((v) => v),
-    save: jest.fn(async (v) => (row = v)),
+  // Minimal stand-in for the Mongoose model: a singleton document store.
+  const model = {
+    findById: jest.fn(async () => row),
+    findOneAndUpdate: jest.fn(async (_filter: any, update: any) => {
+      row = { _id: HOME_HERO_ROW_ID, ...update.$set };
+      return row;
+    }),
   };
   const storage = {
     upload: jest.fn(async () => 'k'),
@@ -41,8 +43,8 @@ function makeService() {
     resolveUrl: jest.fn((k: string) => `https://cdn/${k}`),
   };
   return {
-    svc: new HomeHeroService(repo as any, storage as any),
-    repo,
+    svc: new HomeHeroService(model as any, storage as any),
+    model,
     storage,
   };
 }
@@ -56,7 +58,7 @@ describe('HomeHeroService', () => {
     '%s enforces its image count',
     async (template) => {
       const { min, max } = HOME_HERO_IMAGE_LIMITS[template];
-      const { svc, repo } = makeService();
+      const { svc, model } = makeService();
       await expect(svc.upsert(dto(template, min))).resolves.toMatchObject({
         template,
       });
@@ -69,8 +71,12 @@ describe('HomeHeroService', () => {
           BadRequestException,
         );
       }
-      expect(repo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: HOME_HERO_ROW_ID }),
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: HOME_HERO_ROW_ID },
+        expect.objectContaining({
+          $set: expect.objectContaining({ template }),
+        }),
+        expect.objectContaining({ upsert: true }),
       );
     },
   );

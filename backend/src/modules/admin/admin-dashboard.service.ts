@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
+import type { Model, Types } from 'mongoose';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { Product } from '../products/entities/product.entity';
+import { Category } from '../categories/entities/category.entity';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 const RECENT_ORDERS_LIMIT = 5;
 
 export interface RecentOrderSummary {
-  id: number;
+  id: string;
   customerName: string;
   status: OrderStatus;
   total: number;
@@ -18,7 +19,7 @@ export interface RecentOrderSummary {
 }
 
 export interface LowStockProductSummary {
-  id: number;
+  id: string;
   name: string;
   category: string;
   stockQuantity: number;
@@ -61,10 +62,12 @@ export class AdminDashboardService {
   private readonly lowStockThreshold: number;
 
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<Order>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<Category>,
     private readonly configService: ConfigService,
   ) {
     // parseInt alone accepts negative numbers and lenient-parses garbage
@@ -148,28 +151,22 @@ export class AdminDashboardService {
   }
 
   private countOrdersSince(startOfToday: Date): Promise<number> {
-    return this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.createdAt >= :startOfToday', { startOfToday })
-      .getCount();
+    return this.orderModel.countDocuments({
+      createdAt: { $gte: startOfToday },
+    });
   }
 
   private countPendingOrders(): Promise<number> {
-    return this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.status = :status', { status: OrderStatus.PENDING })
-      .getCount();
+    return this.orderModel.countDocuments({ status: OrderStatus.PENDING });
   }
 
   private countOrdersInRange(start: Date, end: Date): Promise<number> {
-    return this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.createdAt >= :start', { start })
-      .andWhere('order.createdAt < :end', { end })
-      .getCount();
+    return this.orderModel.countDocuments({
+      createdAt: { $gte: start, $lt: end },
+    });
   }
 
-  // Revenue = money actually taken. `confirmedAt IS NOT NULL` cleanly
+  // Revenue = money actually taken. `confirmedAt` being set cleanly
   // excludes `pending` (never confirmed) and `cancelled` (Story 5.4 only
   // allows cancelling a pending order, which never gets confirmedAt stamped)
   // without a separate status filter. `orderCount` (the same cohort) lets
@@ -178,14 +175,13 @@ export class AdminDashboardService {
     start: Date,
     end: Date,
   ): Promise<{ revenue: number; orderCount: number }> {
-    const result = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('SUM(order.total)', 'sum')
-      .addSelect('COUNT(*)', 'count')
-      .where('order.confirmedAt IS NOT NULL')
-      .andWhere('order.confirmedAt >= :start', { start })
-      .andWhere('order.confirmedAt < :end', { end })
-      .getRawOne<{ sum: string | null; count: string }>();
+    const [result] = await this.orderModel.aggregate<{
+      sum: number;
+      count: number;
+    }>([
+      { $match: { confirmedAt: { $gte: start, $lt: end } } },
+      { $group: { _id: null, sum: { $sum: '$total' }, count: { $sum: 1 } } },
+    ]);
     return {
       revenue: result?.sum ? Number(result.sum) : 0,
       orderCount: result?.count ? Number(result.count) : 0,
@@ -194,7 +190,9 @@ export class AdminDashboardService {
 
   // Same revenue definition as getRevenueStatsForMonth (confirmedAt-based),
   // bucketed by day for the hero chart. Backfills days with no revenue as 0
-  // so the frontend always gets a dense, contiguous 14-point series.
+  // so the frontend always gets a dense, contiguous 14-point series. The
+  // (small, windowed) result set is bucketed in JS by local calendar day so
+  // the keys line up with the local-time boundaries used above.
   private async getRevenueDaily(
     now: Date,
   ): Promise<{ date: string; total: number }[]> {
@@ -208,21 +206,15 @@ export class AdminDashboardService {
         (REVENUE_DAILY_WINDOW_DAYS - 1) * 24 * MS_PER_HOUR,
     );
 
-    const rows = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('DATE(order.confirmedAt)', 'date')
-      .addSelect('SUM(order.total)', 'total')
-      .where('order.confirmedAt IS NOT NULL')
-      .andWhere('order.confirmedAt >= :start', { start })
-      .groupBy('DATE(order.confirmedAt)')
-      .getRawMany<{ date: string; total: string | null }>();
+    const rows = await this.orderModel
+      .find({ confirmedAt: { $gte: start } }, { confirmedAt: 1, total: 1 })
+      .lean();
 
-    const totalsByDate = new Map(
-      rows.map((row) => [
-        toDateKey(new Date(row.date)),
-        Number(row.total ?? 0),
-      ]),
-    );
+    const totalsByDate = new Map<string, number>();
+    for (const row of rows) {
+      const key = toDateKey(row.confirmedAt as Date);
+      totalsByDate.set(key, (totalsByDate.get(key) ?? 0) + Number(row.total));
+    }
 
     return Array.from({ length: REVENUE_DAILY_WINDOW_DAYS }, (_, i) => {
       const day = new Date(start.getTime() + i * 24 * MS_PER_HOUR);
@@ -239,14 +231,13 @@ export class AdminDashboardService {
     startOfMonth: Date,
     startOfNextMonth: Date,
   ): Promise<{ total: number; delivered: number; cancelled: number }> {
-    const rows = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('order.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .where('order.createdAt >= :startOfMonth', { startOfMonth })
-      .andWhere('order.createdAt < :startOfNextMonth', { startOfNextMonth })
-      .groupBy('order.status')
-      .getRawMany<{ status: OrderStatus; count: string }>();
+    const rows = await this.orderModel.aggregate<{
+      _id: OrderStatus;
+      count: number;
+    }>([
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
 
     let total = 0;
     let delivered = 0;
@@ -254,18 +245,17 @@ export class AdminDashboardService {
     for (const row of rows) {
       const count = Number(row.count);
       total += count;
-      if (row.status === OrderStatus.DELIVERED) delivered = count;
-      if (row.status === OrderStatus.CANCELLED) cancelled = count;
+      if (row._id === OrderStatus.DELIVERED) delivered = count;
+      if (row._id === OrderStatus.CANCELLED) cancelled = count;
     }
     return { total, delivered, cancelled };
   }
 
   private async getOldestPendingHours(now: Date): Promise<number | null> {
-    const oldest = await this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.status = :status', { status: OrderStatus.PENDING })
-      .orderBy('order.createdAt', 'ASC')
-      .getOne();
+    const oldest = await this.orderModel
+      .findOne({ status: OrderStatus.PENDING }, { createdAt: 1 })
+      .sort({ createdAt: 1 })
+      .lean();
     return oldest
       ? Math.floor((now.getTime() - oldest.createdAt.getTime()) / MS_PER_HOUR)
       : null;
@@ -286,17 +276,15 @@ export class AdminDashboardService {
         (ORDERS_LAST_7_DAYS_WINDOW - 1) * 24 * MS_PER_HOUR,
     );
 
-    const rows = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('DATE(order.createdAt)', 'date')
-      .addSelect('COUNT(*)', 'count')
-      .where('order.createdAt >= :start', { start })
-      .groupBy('DATE(order.createdAt)')
-      .getRawMany<{ date: string; count: string }>();
+    const rows = await this.orderModel
+      .find({ createdAt: { $gte: start } }, { createdAt: 1 })
+      .lean();
 
-    const countsByDate = new Map(
-      rows.map((row) => [toDateKey(new Date(row.date)), Number(row.count)]),
-    );
+    const countsByDate = new Map<string, number>();
+    for (const row of rows) {
+      const key = toDateKey(row.createdAt);
+      countsByDate.set(key, (countsByDate.get(key) ?? 0) + 1);
+    }
 
     return Array.from({ length: ORDERS_LAST_7_DAYS_WINDOW }, (_, i) => {
       const day = new Date(start.getTime() + i * 24 * MS_PER_HOUR);
@@ -305,12 +293,10 @@ export class AdminDashboardService {
   }
 
   private async getRecentOrders(): Promise<RecentOrderSummary[]> {
-    const orders = await this.orderRepository
-      .createQueryBuilder('order')
-      .loadRelationCountAndMap('order.itemCount', 'order.items')
-      .orderBy('order.createdAt', 'DESC')
-      .take(RECENT_ORDERS_LIMIT)
-      .getMany();
+    const orders = await this.orderModel
+      .find()
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(RECENT_ORDERS_LIMIT);
 
     return orders.map((order) => ({
       id: order.id,
@@ -318,31 +304,40 @@ export class AdminDashboardService {
       status: order.status,
       total: order.total,
       createdAt: order.createdAt,
-      itemCount: (order as Order & { itemCount: number }).itemCount,
+      itemCount: order.items.length,
     }));
   }
 
   // Filters to isActive products only — draft/inactive/archived products
-  // aren't restock candidates. Soft-deleted rows (`deletedAt`) are excluded
-  // automatically by TypeORM's default query-builder behavior, same as
-  // ProductsService.findAll — no explicit `deletedAt IS NULL` needed.
+  // aren't restock candidates (archived rows are excluded explicitly with
+  // `deletedAt: null`, replacing TypeORM's implicit soft-delete scope).
   //
   // Story 5.5's planned `GET /api/admin/products/low-stock` should reuse
   // this method rather than duplicating the query.
   private async getLowStockProducts(): Promise<LowStockProductSummary[]> {
-    const products = await this.productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .where('product.stockQuantity <= :threshold', {
-        threshold: this.lowStockThreshold,
+    const products = await this.productModel
+      .find({
+        stockQuantity: { $lte: this.lowStockThreshold },
+        isActive: true,
+        deletedAt: null,
       })
-      .andWhere('product.isActive = :isActive', { isActive: true })
-      .getMany();
+      .sort({ _id: 1 })
+      .lean();
+
+    const categoryIds: Types.ObjectId[] = [
+      ...new Map(
+        products.map((p) => [p.categoryId.toString(), p.categoryId]),
+      ).values(),
+    ];
+    const categories = await this.categoryModel
+      .find({ _id: { $in: categoryIds } }, { name: 1 })
+      .lean();
+    const nameById = new Map(categories.map((c) => [c._id.toString(), c.name]));
 
     return products.map((product) => ({
-      id: product.id,
+      id: product._id.toString(),
       name: product.name,
-      category: product.category.name,
+      category: nameById.get(product.categoryId.toString()) ?? '',
       stockQuantity: product.stockQuantity,
     }));
   }

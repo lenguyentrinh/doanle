@@ -12,7 +12,7 @@ import { SignupDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
 import { LoginDto } from './dto/login.dto';
-import { QueryFailedError } from 'typeorm';
+import { isDuplicateKeyError } from '../../common/database/transaction';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { MailService } from '../mail/mail.service';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -41,34 +41,23 @@ export class AuthService {
         email: user.email,
       };
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        // driverError carries the mysql2-specific fields TypeORM's generic
-        // QueryFailedError<Error> type doesn't declare (mysql2 assigns its
-        // own error code as `code`, e.g. 'ER_DUP_ENTRY').
-        const driverError = error.driverError as { code?: string };
-        const msg = error.message;
-        if (
-          msg.includes('duplicate') ||
-          msg.includes('unique') ||
-          driverError.code === '23505' ||
-          driverError.code === 'ER_DUP_ENTRY'
-        ) {
-          // Email exists — check if already verified
-          const existing = await this.userService.findByEmail(dto.email);
-          if (existing && !existing.emailVerified) {
-            // Resume flow: resend OTP to unverified user
-            this.logger.log(
-              `Email ${dto.email} exists but not verified, resending OTP`,
-            );
-            await this.resendOtpForUser(dto.email);
-            return {
-              message:
-                'Mã OTP đã được gửi đến email của bạn. Dùng mã này để xác thực tài khoản.',
-              email: dto.email,
-            };
-          }
-          throw new ConflictException('Email đã tồn tại');
+      // MongoDB duplicate-key (E11000) on the unique email index.
+      if (isDuplicateKeyError(error)) {
+        // Email exists — check if already verified
+        const existing = await this.userService.findByEmail(dto.email);
+        if (existing && !existing.emailVerified) {
+          // Resume flow: resend OTP to unverified user
+          this.logger.log(
+            `Email ${dto.email} exists but not verified, resending OTP`,
+          );
+          await this.resendOtpForUser(dto.email);
+          return {
+            message:
+              'Mã OTP đã được gửi đến email của bạn. Dùng mã này để xác thực tài khoản.',
+            email: dto.email,
+          };
         }
+        throw new ConflictException('Email đã tồn tại');
       }
       throw error;
     }
@@ -138,7 +127,7 @@ export class AuthService {
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 
-  async revokeUserTokens(userId: number) {
+  async revokeUserTokens(userId: string) {
     await this.refreshTokenService.revokeAllUserTokens(userId);
   }
 

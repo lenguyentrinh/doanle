@@ -3,44 +3,51 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { Product } from './entities/product.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import type { QueryFilter, Model, SortOrder } from 'mongoose';
+import { Types } from 'mongoose';
+import { Product, ProductDocument } from './entities/product.entity';
 import { ProductQueryDto, ProductSort } from './dto/product-query.dto';
 import { AdminProductQueryDto } from './dto/admin-product-query.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { StorageService } from '../../common/storage/storage.service';
-import { escapeLike } from '../../common/utils/string.utils';
+import { escapeRegex } from '../../common/utils/string.utils';
 import { createPaginatedResponse } from '../../common/utils/pagination.utils';
 import { computeFinalPrice } from '../../common/utils/pricing.utils';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 import { CategoriesService } from '../categories/categories.service';
 
 // Public product shape: internal flags (`isActive`, `deletedAt`) are stripped
 // at read time — they are constant for returned rows and not part of the API.
-// `category` serializes as the category *name* (string), not the relation
-// object or its raw id — the storefront contract predates the Category
-// entity and stays string-based so it doesn't ripple across every PLP/PDP
-// consumer.
-export type ProductResponse = Omit<
-  Product,
-  'isActive' | 'deletedAt' | 'categoryId' | 'category'
-> & {
+// `category` serializes as the category *name* (string), not the raw id — the
+// storefront contract predates the Category entity and stays string-based so
+// it doesn't ripple across every PLP/PDP consumer.
+export interface ProductResponse {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
   category: string;
+  imageKeys: string[];
+  createdAt: Date;
+  updatedAt: Date;
   imageUrls: string[];
   discountPercentage: number | null;
   // Derived, never stored: `price` unchanged when discountPercentage is
   // null/0, otherwise price * (1 - discountPercentage / 100) rounded to 2dp.
   finalPrice: number;
-};
+}
 
 // Admin product shape: everything shopper responses have, plus the internal
 // flags the admin UI needs (Active/Inactive toggle, Archived badge) and the
-// raw categoryId so the edit form can pre-select the right dropdown option.
+// raw categoryId (ObjectId string) so the edit form can pre-select the right
+// dropdown option.
 export type AdminProductResponse = ProductResponse & {
   isActive: boolean;
   deletedAt: Date | null;
-  categoryId: number;
+  categoryId: string;
 };
 
 export interface PaginatedProducts {
@@ -72,8 +79,8 @@ const MAX_IMAGES = 5;
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
     private readonly storageService: StorageService,
     private readonly categoriesService: CategoriesService,
   ) {}
@@ -100,71 +107,74 @@ export class ProductsService {
       throw new BadRequestException('minPrice không được lớn hơn maxPrice');
     }
 
-    const qb = this.productsRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .where('product.isActive = :isActive', { isActive: true });
+    // Storefront scope: active and not archived (soft-deleted).
+    const filter: QueryFilter<Product> = { isActive: true, deletedAt: null };
 
     if (category) {
-      qb.andWhere('category.name = :category', { category });
+      const categoryId = await this.categoriesService.findIdByName(category);
+      if (!categoryId) {
+        return createPaginatedResponse([], 0, page, limit);
+      }
+      filter.categoryId = categoryId;
     }
 
     if (search) {
-      // Escape LIKE wildcards so user input is matched literally (default
-      // MySQL escape char is backslash); otherwise a lone `%` matches all rows.
-      const escaped = escapeLike(search);
-      qb.andWhere(
-        '(product.name LIKE :search OR product.description LIKE :search)',
-        { search: `%${escaped}%` },
-      );
+      // Escaped so user input is matched literally (a lone `%` or `.` must
+      // not act as a wildcard).
+      const re = new RegExp(escapeRegex(search), 'i');
+      filter.$or = [{ name: re }, { description: re }];
     }
 
-    if (minPrice !== undefined) {
-      qb.andWhere('product.price >= :minPrice', { minPrice });
-    }
-
-    if (maxPrice !== undefined) {
-      qb.andWhere('product.price <= :maxPrice', { maxPrice });
-    }
-
-    if (inStock) {
-      qb.andWhere('product.stockQuantity > 0');
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      filter.price = {
+        ...(minPrice !== undefined ? { $gte: minPrice } : {}),
+        ...(maxPrice !== undefined ? { $lte: maxPrice } : {}),
+      };
     }
 
     if (lowStock) {
-      qb.andWhere('product.stockQuantity > 0 AND product.stockQuantity < 5');
+      filter.stockQuantity = { $gt: 0, $lt: 5 };
+    } else if (inStock) {
+      filter.stockQuantity = { $gt: 0 };
     }
 
     if (newArrivals) {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      qb.andWhere('product.createdAt >= :thirtyDaysAgo', { thirtyDaysAgo });
+      filter.createdAt = { $gte: thirtyDaysAgo };
     }
 
-    this.applySort(qb, sort);
+    const [products, total] = await Promise.all([
+      this.productModel
+        .find(filter)
+        .sort(this.sortSpec(sort))
+        .skip((page - 1) * limit)
+        .limit(limit),
+      this.productModel.countDocuments(filter),
+    ]);
 
-    qb.skip((page - 1) * limit).take(limit);
-
-    const [products, total] = await qb.getManyAndCount();
-
+    const names = await this.categoryNamesFor(products);
     return createPaginatedResponse(
-      products.map((p) => this.toResponse(p)),
+      products.map((p) => this.toResponse(p, names)),
       total,
       page,
       limit,
     );
   }
 
-  async findOne(id: number): Promise<ProductResponse> {
-    const product = await this.productsRepository.findOne({
-      where: { id, isActive: true },
-      relations: ['category'],
-    });
+  async findOne(id: string): Promise<ProductResponse> {
+    const product = isObjectIdString(id)
+      ? await this.productModel.findOne({
+          _id: id,
+          isActive: true,
+          deletedAt: null,
+        })
+      : null;
 
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm ${id}`);
     }
 
-    return this.toResponse(product);
+    return this.toResponse(product, await this.categoryNamesFor([product]));
   }
 
   async getCategories(): Promise<string[]> {
@@ -181,27 +191,45 @@ export class ProductsService {
     priceCeil: number;
     categories: { category: string; count: number }[];
   }> {
-    const totals = await this.productsRepository
-      .createQueryBuilder('product')
-      .select('COUNT(*)', 'count')
-      .addSelect('COALESCE(SUM(product.stockQuantity), 0)', 'totalStock')
-      .addSelect('MAX(product.price)', 'maxPrice')
-      .where('product.isActive = :isActive', { isActive: true })
-      .getRawOne<{
-        count: string;
-        totalStock: string;
-        maxPrice: string | null;
-      }>();
+    const activeScope = { isActive: true, deletedAt: null };
 
-    const categoryRows = await this.productsRepository
-      .createQueryBuilder('product')
-      .innerJoin('product.category', 'category')
-      .select('category.name', 'category')
-      .addSelect('COUNT(*)', 'count')
-      .where('product.isActive = :isActive', { isActive: true })
-      .groupBy('category.id')
-      .orderBy('category.name', 'ASC')
-      .getRawMany<{ category: string; count: string }>();
+    const [totalsRows, categoryRows] = await Promise.all([
+      this.productModel.aggregate<{
+        count: number;
+        totalStock: number;
+        maxPrice: number | null;
+      }>([
+        { $match: activeScope },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalStock: { $sum: '$stockQuantity' },
+            maxPrice: { $max: '$price' },
+          },
+        },
+      ]),
+      this.productModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+        { $match: activeScope },
+        { $group: { _id: '$categoryId', count: { $sum: 1 } } },
+      ]),
+    ]);
+    const totals = totalsRows[0];
+
+    const names = await this.categoriesService.findNamesByIds(
+      categoryRows.map((r) => r._id),
+    );
+    // inner join semantics: a product whose category no longer exists isn't
+    // counted under any category.
+    const categories = categoryRows
+      .filter((r) => names.has(r._id.toString()))
+      .map((r) => ({
+        category: names.get(r._id.toString())!,
+        count: Number(r.count),
+      }))
+      .sort((a, b) =>
+        a.category.localeCompare(b.category, 'en', { sensitivity: 'accent' }),
+      );
 
     return {
       designCount: Number(totals?.count ?? 0),
@@ -210,15 +238,12 @@ export class ProductsService {
       // slider ceiling (the floor is always 0, not the cheapest item's
       // price) — purely a display concern, so it's not rounded here.
       priceCeil: totals?.maxPrice != null ? Number(totals.maxPrice) : 0,
-      categories: categoryRows.map((r) => ({
-        category: r.category,
-        count: Number(r.count),
-      })),
+      categories,
     };
   }
 
   // Admin list: must surface inactive AND archived (soft-deleted) products
-  // (`.withDeleted()`, no `isActive` filter) — the opposite of `findAll`'s
+  // (no `deletedAt` / `isActive` filter) — the opposite of `findAll`'s
   // shopper-scoped query. Default sort is always newest-first; this epic's
   // AC has no sort control for the admin table.
   async findAllForAdmin(
@@ -226,34 +251,31 @@ export class ProductsService {
   ): Promise<PaginatedAdminProducts> {
     const { search, categoryId, page, limit } = query;
 
-    const qb = this.productsRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .withDeleted();
+    const filter: QueryFilter<Product> = {};
 
     if (categoryId) {
-      qb.andWhere('product.categoryId = :categoryId', { categoryId });
+      filter.categoryId = categoryId;
     }
 
     if (search) {
-      const escaped = escapeLike(search);
-      qb.andWhere(
-        '(product.name LIKE :search OR product.description LIKE :search)',
-        { search: `%${escaped}%` },
-      );
+      const re = new RegExp(escapeRegex(search), 'i');
+      filter.$or = [{ name: re }, { description: re }];
     }
 
-    qb.orderBy('product.createdAt', 'DESC');
-    qb.skip((page - 1) * limit).take(limit);
-
-    const [[products, total], globalStats] = await Promise.all([
-      qb.getManyAndCount(),
+    const [products, total, globalStats] = await Promise.all([
+      this.productModel
+        .find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      this.productModel.countDocuments(filter),
       this.getGlobalStats(),
     ]);
 
+    const names = await this.categoryNamesFor(products);
     return {
       ...createPaginatedResponse(
-        products.map((p) => this.toAdminResponse(p)),
+        products.map((p) => this.toAdminResponse(p, names)),
         total,
         page,
         limit,
@@ -263,8 +285,8 @@ export class ProductsService {
   }
 
   // Whole-catalog counters for the admin grid's stat strip — always
-  // unfiltered/unpaginated (matches findAllForAdmin's own `.withDeleted()`
-  // scope so archived products count toward `totalProducts`/`archivedCount`).
+  // unfiltered/unpaginated (matches findAllForAdmin's own scope so archived
+  // products count toward `totalProducts`/`archivedCount`).
   // Low-stock threshold (<5) mirrors the shopper-facing `lowStock` filter
   // above rather than AdminDashboardService's configurable threshold — this
   // strip predates that config knob and isn't wired to it.
@@ -275,33 +297,30 @@ export class ProductsService {
     archivedCount: number;
     lowStockCount: number;
   }> {
-    const result = await this.productsRepository
-      .createQueryBuilder('product')
-      .withDeleted()
-      .select('COUNT(*)', 'total')
-      .addSelect(
-        'SUM(CASE WHEN product.deletedAt IS NULL AND product.isActive = true THEN 1 ELSE 0 END)',
-        'active',
-      )
-      .addSelect(
-        'SUM(CASE WHEN product.deletedAt IS NULL AND product.isActive = false THEN 1 ELSE 0 END)',
-        'hidden',
-      )
-      .addSelect(
-        'SUM(CASE WHEN product.deletedAt IS NOT NULL THEN 1 ELSE 0 END)',
-        'archived',
-      )
-      .addSelect(
-        'SUM(CASE WHEN product.deletedAt IS NULL AND product.stockQuantity < 5 THEN 1 ELSE 0 END)',
-        'lowStock',
-      )
-      .getRawOne<{
-        total: string;
-        active: string | null;
-        hidden: string | null;
-        archived: string | null;
-        lowStock: string | null;
-      }>();
+    const notArchived = { $eq: ['$deletedAt', null] };
+    const count = (cond: object) => ({
+      $sum: { $cond: [cond, 1, 0] },
+    });
+    const [result] = await this.productModel.aggregate<{
+      total: number;
+      active: number;
+      hidden: number;
+      archived: number;
+      lowStock: number;
+    }>([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          active: count({ $and: [notArchived, { $eq: ['$isActive', true] }] }),
+          hidden: count({ $and: [notArchived, { $eq: ['$isActive', false] }] }),
+          archived: count({ $ne: ['$deletedAt', null] }),
+          lowStock: count({
+            $and: [notArchived, { $lt: ['$stockQuantity', 5] }],
+          }),
+        },
+      },
+    ]);
 
     return {
       totalProducts: Number(result?.total ?? 0),
@@ -312,44 +331,44 @@ export class ProductsService {
     };
   }
 
-  async getByIdForAdmin(id: number): Promise<AdminProductResponse> {
+  async getByIdForAdmin(id: string): Promise<AdminProductResponse> {
     const product = await this.reloadWithCategory(id);
-    return this.toAdminResponse(product);
+    return this.toAdminResponse(
+      product,
+      await this.categoryNamesFor([product]),
+    );
   }
 
   // Deliberately not `ProductsService.findOne()` — that method filters
   // `isActive: true`, which would 404 on a perfectly valid *inactive*
-  // product an admin is trying to view/reactivate. Plain (non-query-builder)
-  // `findOne` already excludes soft-deleted rows by default, which is the
-  // only exclusion an admin lookup wants — an archived product still 404s.
-  private async findOneForAdmin(id: number): Promise<Product | null> {
-    return this.productsRepository.findOne({ where: { id } });
+  // product an admin is trying to view/reactivate. An archived product still
+  // 404s: `deletedAt: null` is the only exclusion an admin lookup wants.
+  private async findOneForAdmin(id: string): Promise<ProductDocument | null> {
+    if (!isObjectIdString(id)) return null;
+    return this.productModel.findOne({ _id: id, deletedAt: null });
   }
 
-  // Refetches with the `category` relation joined, for building a response
-  // after create/update. Deliberately not folded into findOneForAdmin: that
-  // helper is also used right before mutating `categoryId`, and having a
-  // stale `category` relation object loaded on the same entity would let
-  // TypeORM's persistence layer prefer the (unchanged) relation's id over the
-  // scalar column we just updated.
-  private async reloadWithCategory(id: number): Promise<Product> {
-    const product = await this.productsRepository.findOne({
-      where: { id },
-      relations: ['category'],
-    });
+  // Refetches (fresh state) for building a response after create/update.
+  private async reloadWithCategory(id: string): Promise<ProductDocument> {
+    const product = await this.findOneForAdmin(id);
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm ${id}`);
     }
     return product;
   }
 
-  async deleteProduct(id: number): Promise<{ message: string }> {
+  async deleteProduct(id: string): Promise<{ message: string }> {
     const product = await this.findOneForAdmin(id);
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm ${id}`);
     }
 
-    await this.productsRepository.softDelete(id);
+    // Soft delete ("archive"): order lines keep referencing the product, so
+    // it is never hard-deleted (the old schema's ON DELETE RESTRICT).
+    await this.productModel.updateOne(
+      { _id: product._id },
+      { $set: { deletedAt: new Date() } },
+    );
     return { message: 'Đã lưu trữ sản phẩm' };
   }
 
@@ -360,23 +379,21 @@ export class ProductsService {
     await this.categoriesService.assertExists(dto.categoryId);
     const imageKeys = await this.uploadAll(files);
 
-    const product = this.productsRepository.create({
+    const saved = await this.productModel.create({
       name: dto.name,
       description: dto.description,
-      categoryId: dto.categoryId,
+      categoryId: new Types.ObjectId(dto.categoryId),
       price: dto.price,
       stockQuantity: dto.stockQuantity,
       isActive: dto.isActive ?? true,
       imageKeys,
       discountPercentage: dto.discountPercentage ?? null,
     });
-
-    const saved = await this.productsRepository.save(product);
-    return this.toAdminResponse(await this.reloadWithCategory(saved.id));
+    return this.toAdminResponse(saved, await this.categoryNamesFor([saved]));
   }
 
   async updateProduct(
-    id: number,
+    id: string,
     dto: UpdateProductDto,
     newFiles: Express.Multer.File[],
   ): Promise<AdminProductResponse> {
@@ -407,34 +424,33 @@ export class ProductsService {
       );
     }
 
-    // Delete the on-disk file for any image the admin dropped — otherwise
-    // it's orphaned on disk forever (only the failure/bound-violation paths
-    // above ever call cleanupKeys today).
+    // Delete the stored file for any image the admin dropped — otherwise
+    // it's orphaned forever (only the failure/bound-violation paths above
+    // ever call cleanupKeys today).
     const droppedKeys = product.imageKeys.filter(
       (key) => !keptKeys.includes(key),
     );
 
-    Object.assign(product, {
-      name: dto.name ?? product.name,
-      description: dto.description ?? product.description,
-      categoryId: dto.categoryId ?? product.categoryId,
-      price: dto.price ?? product.price,
-      stockQuantity: dto.stockQuantity ?? product.stockQuantity,
-      isActive: dto.isActive ?? product.isActive,
-      imageKeys,
-      // See UpdateProductDto: field omitted (undefined) means "no change";
-      // field explicitly cleared (null) means "remove the discount".
-      discountPercentage:
-        dto.discountPercentage !== undefined
-          ? dto.discountPercentage
-          : product.discountPercentage,
-    });
+    product.name = dto.name ?? product.name;
+    product.description = dto.description ?? product.description;
+    if (dto.categoryId !== undefined) {
+      product.categoryId = new Types.ObjectId(dto.categoryId);
+    }
+    product.price = dto.price ?? product.price;
+    product.stockQuantity = dto.stockQuantity ?? product.stockQuantity;
+    product.isActive = dto.isActive ?? product.isActive;
+    product.imageKeys = imageKeys;
+    // See UpdateProductDto: field omitted (undefined) means "no change";
+    // field explicitly cleared (null) means "remove the discount".
+    if (dto.discountPercentage !== undefined) {
+      product.discountPercentage = dto.discountPercentage;
+    }
 
-    const saved = await this.productsRepository.save(product);
+    const saved = await product.save();
     if (droppedKeys.length > 0) {
       await this.cleanupKeys(droppedKeys);
     }
-    return this.toAdminResponse(await this.reloadWithCategory(saved.id));
+    return this.toAdminResponse(saved, await this.categoryNamesFor([saved]));
   }
 
   // Parses the JSON-stringified existingImageKeys field and validates it is
@@ -473,7 +489,7 @@ export class ProductsService {
   // Uploads run to completion before any DB write ("if image upload fails
   // the product is not created/updated", epic AC, literal) — if any upload
   // throws, files already written for *this* request are cleaned up
-  // best-effort and the error propagates before touching the repository.
+  // best-effort and the error propagates before touching the database.
   private async uploadAll(files: Express.Multer.File[]): Promise<string[]> {
     const uploadedKeys: string[] = [];
     try {
@@ -493,32 +509,36 @@ export class ProductsService {
     );
   }
 
-  private applySort(
-    qb: ReturnType<Repository<Product>['createQueryBuilder']>,
-    sort?: ProductSort,
-  ): void {
+  private sortSpec(sort?: ProductSort): Record<string, SortOrder> {
     switch (sort) {
       case ProductSort.PRICE_ASC:
-        qb.orderBy('product.price', 'ASC');
-        break;
+        return { price: 1, _id: 1 };
       case ProductSort.PRICE_DESC:
-        qb.orderBy('product.price', 'DESC');
-        break;
+        return { price: -1, _id: -1 };
       // TODO(epic-4): real popularity sort once order/sales data exists.
       // Until then popularity falls back to newest-first.
       case ProductSort.POPULARITY:
       case ProductSort.NEWEST:
       default:
-        qb.orderBy('product.createdAt', 'DESC');
-        break;
+        return { createdAt: -1, _id: -1 };
     }
+  }
+
+  private async categoryNamesFor(
+    products: ProductDocument[],
+  ): Promise<Map<string, string>> {
+    const ids = [...new Set(products.map((p) => p.categoryId.toString()))];
+    return this.categoriesService.findNamesByIds(ids);
   }
 
   /**
    * Generate public image URLs at read time — keys are never stored as URLs.
    * Internal flags (`isActive`, `deletedAt`) are intentionally not exposed.
    */
-  private toResponse(product: Product): ProductResponse {
+  private toResponse(
+    product: ProductDocument,
+    categoryNames: Map<string, string>,
+  ): ProductResponse {
     const keys = product.imageKeys ?? [];
     return {
       id: product.id,
@@ -526,22 +546,25 @@ export class ProductsService {
       description: product.description,
       price: product.price,
       stockQuantity: product.stockQuantity,
-      category: product.category.name,
+      category: categoryNames.get(product.categoryId.toString()) ?? '',
       imageKeys: product.imageKeys,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       imageUrls: keys.map((key) => this.storageService.resolveUrl(key)),
-      discountPercentage: product.discountPercentage,
-      finalPrice: computeFinalPrice(product.price, product.discountPercentage),
+      discountPercentage: product.discountPercentage ?? null,
+      finalPrice: computeFinalPrice(
+        product.price,
+        product.discountPercentage ?? null,
+      ),
     };
   }
 
   // Bulk admin action for the "apply discount to many products" picker
-  // screen — a single UPDATE ... WHERE id IN (...) rather than N
+  // screen — a single updateMany ({ _id: { $in: ids } }) rather than N
   // save() calls, since the set of ids can be large and there's nothing
   // per-row to validate beyond the shared discount value.
   async applyBulkDiscount(
-    productIds: number[],
+    productIds: string[],
     discountPercentage: number | null,
   ): Promise<{ message: string; updatedCount: number }> {
     if (!productIds || productIds.length === 0) {
@@ -555,26 +578,29 @@ export class ProductsService {
       throw new BadRequestException('Phần trăm giảm giá phải từ 0 đến 100');
     }
 
-    const result = await this.productsRepository.update(
-      { id: In(productIds) },
-      { discountPercentage },
+    const result = await this.productModel.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { discountPercentage } },
     );
 
     return {
       message: 'Đã áp dụng giảm giá',
-      updatedCount: result.affected ?? 0,
+      updatedCount: result.matchedCount,
     };
   }
 
   // Admin shape: like toResponse() but also exposes isActive/deletedAt/
   // categoryId, so the list/edit UI can render Active/Inactive and Archived
   // states and pre-select the right category in the edit form.
-  private toAdminResponse(product: Product): AdminProductResponse {
+  private toAdminResponse(
+    product: ProductDocument,
+    categoryNames: Map<string, string>,
+  ): AdminProductResponse {
     return {
-      ...this.toResponse(product),
+      ...this.toResponse(product, categoryNames),
       isActive: product.isActive,
-      deletedAt: product.deletedAt,
-      categoryId: product.categoryId,
+      deletedAt: product.deletedAt ?? null,
+      categoryId: product.categoryId.toString(),
     };
   }
 }

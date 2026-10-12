@@ -1,25 +1,22 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 
-@Entity('categories')
+@Schema({ collection: 'categories', timestamps: true })
 export class Category {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column({ length: 100, unique: true })
+  @Prop({ required: true, maxlength: 100, unique: true })
   name!: string;
 
-  @Column({ length: 120, unique: true })
+  @Prop({ required: true, maxlength: 120, unique: true })
   slug!: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }
+
+export type CategoryDocument = HydratedDocument<Category>;
+export const CategorySchema = applyJsonTransform(
+  SchemaFactory.createForClass(Category),
+);

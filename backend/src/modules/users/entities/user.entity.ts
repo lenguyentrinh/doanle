@@ -1,51 +1,70 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  OneToMany,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 import { UserRole } from './user-role.enum';
-import { Address } from './address.entity';
 
-@Entity('users')
+@Schema({
+  collection: 'users',
+  timestamps: { createdAt: true, updatedAt: false },
+})
 export class User {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column()
+  @Prop({ required: true })
   userName!: string;
 
-  @Column({ unique: true })
+  // Lower-cased + trimmed so uniqueness stays case-insensitive, matching the
+  // previous MySQL (case-insensitive collation) behaviour.
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email!: string;
 
-  @Column()
+  @Prop({ required: true })
   password!: string;
 
-  @Column({ nullable: true, type: 'date' })
+  @Prop({ type: String, default: null })
   birthDate!: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Prop({ type: String, default: null })
   phoneNumber!: string | null;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
+  @Prop({
+    type: String,
+    enum: Object.values(UserRole),
+    default: UserRole.CUSTOMER,
+  })
   role!: UserRole;
 
-  @Column({ default: false })
+  @Prop({ default: false })
   emailVerified!: boolean;
 
-  @Column({ nullable: true })
-  emailOtpCode!: string;
+  @Prop({ type: String, default: null })
+  emailOtpCode!: string | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Prop({ type: Date, default: null })
   emailOtpExpires!: Date | null;
 
-  @Column({ name: 'email_otp_attempts', default: 0 })
+  @Prop({ default: 0 })
   emailOtpAttempts!: number;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  createdAt!: Date;
+  // Bumped by every address mutation inside its transaction so concurrent
+  // address writes for one user conflict and serialize (replaces the old
+  // SELECT ... FOR UPDATE on the user's address rows). Never exposed.
+  @Prop({ default: 0, select: false })
+  addressLockSeq!: number;
 
-  @OneToMany(() => Address, (address) => address.user)
-  addresses!: Address[];
+  createdAt!: Date;
 }
+
+export type UserDocument = HydratedDocument<User>;
+// Defence in depth: secrets are never serialized, even if a User document is
+// returned directly from a handler.
+export const UserSchema = applyJsonTransform(
+  SchemaFactory.createForClass(User),
+  [
+    'password',
+    'emailOtpCode',
+    'emailOtpExpires',
+    'emailOtpAttempts',
+    'addressLockSeq',
+  ],
+);

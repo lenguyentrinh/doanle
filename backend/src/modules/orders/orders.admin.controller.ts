@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Query,
   UseGuards,
@@ -16,6 +15,7 @@ import { UserRole } from '../users/entities/user-role.enum';
 import { OrdersAdminService } from './orders-admin.service';
 import { AdminOrderQueryDto } from './dto/admin-order-query.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 // AuthGuard('jwt') must run before RolesGuard so req.user is populated
 // before the role check (Story 5.1 precedent). OrdersAdminService is now
@@ -33,20 +33,20 @@ export class OrdersAdminController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return { data: await this.ordersAdminService.getOrderForAdmin(id) };
   }
 
   @Patch(':id/status')
   updateStatus(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
     return this.ordersAdminService.updateOrderStatus(id, dto.status);
   }
 
   @Patch(':id/cancel')
-  cancel(@Param('id', ParseIntPipe) id: number) {
+  cancel(@Param('id', ParseObjectIdPipe) id: string) {
     return this.ordersAdminService.cancelOrder(id);
   }
 }

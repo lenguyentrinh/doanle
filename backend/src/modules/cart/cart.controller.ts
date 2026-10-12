@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -17,6 +16,7 @@ import type { UserPrincipal } from '../auth/strategies/jwt.strategy';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { MergeCartDto } from './dto/merge-cart.dto';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @ApiTags('cart')
 // Using global `api/` prefix (excludes /auth and /users for backward compatibility).
@@ -44,7 +44,7 @@ export class CartController {
   @Patch(':itemId')
   updateItem(
     @CurrentUser() user: UserPrincipal,
-    @Param('itemId', ParseIntPipe) itemId: number,
+    @Param('itemId', ParseObjectIdPipe) itemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
     return this.cartService.updateItem(user.id, itemId, dto);
@@ -53,7 +53,7 @@ export class CartController {
   @Delete(':itemId')
   removeItem(
     @CurrentUser() user: UserPrincipal,
-    @Param('itemId', ParseIntPipe) itemId: number,
+    @Param('itemId', ParseObjectIdPipe) itemId: string,
   ) {
     return this.cartService.removeItem(user.id, itemId);
   }

@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Order } from './entities/order.entity';
-import { OrderItem } from './entities/order-item.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Order, OrderSchema } from './entities/order.entity';
+import { Product, ProductSchema } from '../products/entities/product.entity';
+import { CartItem, CartItemSchema } from '../cart/entities/cart-item.entity';
 import { OrdersService } from './orders.service';
 import { OrdersAdminService } from './orders-admin.service';
 import { OrdersController } from './orders.controller';
@@ -13,7 +14,14 @@ import { StorageModule } from '../../common/storage/storage.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    // Order items are embedded in Order, so there is no OrderItem model.
+    // Product/CartItem are registered for the stock reservation and
+    // cart-clearing steps of order placement.
+    MongooseModule.forFeature([
+      { name: Order.name, schema: OrderSchema },
+      { name: Product.name, schema: ProductSchema },
+      { name: CartItem.name, schema: CartItemSchema },
+    ]),
     UsersModule,
     MailModule,
     InventoryModule,

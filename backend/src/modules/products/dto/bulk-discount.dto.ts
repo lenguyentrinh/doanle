@@ -1,7 +1,7 @@
 import {
   ArrayNotEmpty,
   IsArray,
-  IsInt,
+  IsMongoId,
   IsNumber,
   IsOptional,
   Max,
@@ -17,8 +17,8 @@ import {
 export class BulkDiscountDto {
   @IsArray({ message: 'productIds phải là một mảng' })
   @ArrayNotEmpty({ message: 'Cần chọn ít nhất một sản phẩm' })
-  @IsInt({ each: true, message: 'productIds phải là mảng số nguyên' })
-  productIds!: number[];
+  @IsMongoId({ each: true, message: 'productIds phải là mảng ObjectId hợp lệ' })
+  productIds!: string[];
 
   @IsOptional()
   @IsNumber({}, { message: 'Phần trăm giảm giá phải là số' })

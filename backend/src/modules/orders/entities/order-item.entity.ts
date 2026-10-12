@@ -1,48 +1,29 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Index,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { ColumnNumericTransformer } from '../../../common/utils/column-numeric.transformer';
-import { Order } from './order.entity';
-import { Product } from '../../products/entities/product.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 
-@Entity('order_items')
-@Index('idx_order_items_order_id', ['orderId'])
-@Index('idx_order_items_product_id', ['productId'])
+// Embedded in Order.items (no collection of its own). Each line keeps its own
+// `_id`, exposed as `id` in responses. Deleting a product that an order line
+// references is prevented by archiving (soft delete) — products are never
+// hard-deleted by the app, matching the old ON DELETE RESTRICT.
+@Schema()
 export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column({ name: 'order_id' })
-  orderId!: number;
-
-  @Column({ name: 'product_id' })
-  productId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Product', required: true })
+  productId!: Types.ObjectId;
 
   // Snapshotted at order time so historical orders survive product edits.
-  @Column({ name: 'product_name' })
+  @Prop({ required: true })
   productName!: string;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ required: true })
   price!: number;
 
-  @Column({ type: 'int' })
+  @Prop({ required: true })
   quantity!: number;
-
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'order_id' })
-  order!: Order;
-
-  @ManyToOne(() => Product, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'product_id' })
-  product!: Product;
 }
+
+export const OrderItemSchema = applyJsonTransform(
+  SchemaFactory.createForClass(OrderItem),
+);

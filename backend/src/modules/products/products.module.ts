@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from './entities/product.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Product, ProductSchema } from './entities/product.entity';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { ProductsAdminController } from './products.admin.controller';
@@ -9,7 +9,7 @@ import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product]),
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     StorageModule,
     CategoriesModule,
   ],

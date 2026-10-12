@@ -6,7 +6,7 @@ A full-stack e-commerce platform built with modern web technologies. This monore
 
 - **`backend/`** - NestJS REST API for products, categories, cart, orders, users, auth, admin dashboard, and inventory
 - **`frontend/`** - Next.js (App Router) storefront and admin UI
-- **`docker-compose.yml`** - Runs MySQL, backend, and frontend together
+- **`docker-compose.yml`** - Runs MongoDB (single-node replica set), backend, and frontend together
 
 ## Quick Start
 
@@ -26,6 +26,8 @@ Set up environment variables:
 - Frontend: create `frontend/.env.local` (see `frontend/.env.example`)
 - Docker Compose: create `.env` at the repo root (see `.env.example`) — only needed to run everything via `docker compose up`
 
+**MongoDB:** the backend needs a MongoDB **replica set** (orders, cart and refresh-token rotation use multi-document transactions). `docker compose up mongo` starts a single-node replica set (`rs0`) on port 27017. When running the backend on the host against that container, use `MONGODB_URI=mongodb://localhost:27017/ecommerce?directConnection=true` in `backend/.env`. Inside compose the backend uses `mongodb://mongo:27017/ecommerce?replicaSet=rs0` automatically.
+
 ### Development
 
 Run each service in its own terminal (or use `docker compose up` to run everything together):
@@ -44,16 +46,17 @@ pnpm run dev
 ```
 App runs on http://localhost:8000
 
-Database migrations (run from `backend/`):
+Seed the catalogue (run from `backend/`; there are no migrations — MongoDB collections and indexes are created by Mongoose on startup):
 ```bash
-pnpm run migration:run
+pnpm seed        # default demo catalogue (idempotent, additive)
+pnpm seed:oren   # Oren catalogue; replaces existing products (needs PRODUCT_IMAGE_BASE_URL=/images/products)
 ```
 
 ## Technology Stack
 
 **Backend (`backend/`):**
 - NestJS (TypeScript framework)
-- MySQL + TypeORM
+- MongoDB + Mongoose (`@nestjs/mongoose`); ids are ObjectId strings in the API
 - JWT authentication (access + refresh tokens)
 - Nodemailer (SMTP) for transactional email (OTP, order confirmation, status updates)
 - Cloudinary for product image storage

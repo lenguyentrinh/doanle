@@ -8,13 +8,13 @@ import { ConfigService } from '@nestjs/config';
 import { UserRole } from '../../users/entities/user-role.enum';
 
 interface JwtPayload {
-  sub: number;
+  sub: string;
   email: string;
   role: UserRole;
 }
 
 export interface UserPrincipal {
-  id: number;
+  id: string;
   email: string;
   role: UserRole;
 }

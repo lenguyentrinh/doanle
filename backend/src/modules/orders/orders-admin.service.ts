@@ -4,20 +4,24 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
-import { Order, OrderStatus } from './entities/order.entity';
-import { OrderItem } from './entities/order-item.entity';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import type { Connection, QueryFilter, Model } from 'mongoose';
+import { Order, OrderDocument, OrderStatus } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { UserService } from '../users/user.service';
 import { MailService } from '../mail/mail.service';
 import { AdminOrderQueryDto } from './dto/admin-order-query.dto';
 import { AdminOrderDetailResponseDto } from './dto/order-response.dto';
-import type { OrderWithItemImages, OrderItemWithImage } from './orders.service';
+import {
+  loadProductImageMap,
+  mapItemsWithImages,
+  toOrderResponseDto,
+} from './orders.mapper';
 import { StorageService } from '../../common/storage/storage.service';
-import { escapeLike } from '../../common/utils/string.utils';
-import { resolveFirstImageUrl } from '../../common/utils/image.utils';
+import { escapeRegex } from '../../common/utils/string.utils';
 import { createPaginatedResponse } from '../../common/utils/pagination.utils';
+import { runInTransaction } from '../../common/database/transaction';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 
 const FORWARD_STATUSES = [
   OrderStatus.PENDING,
@@ -27,7 +31,7 @@ const FORWARD_STATUSES = [
 ];
 
 export interface AdminOrderSummary {
-  id: number;
+  id: string;
   customerName: string;
   status: OrderStatus;
   total: number;
@@ -55,52 +59,62 @@ export class OrdersAdminService {
   private readonly logger = new Logger(OrdersAdminService.name);
 
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    private readonly dataSource: DataSource,
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<Order>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly userService: UserService,
     private readonly mailService: MailService,
     private readonly storageService: StorageService,
   ) {}
 
   // Paginated/filtered admin order list (Story 5.4) — unlike findAllForUser,
-  // not scoped to a caller. `search` matches a substring of either the order
-  // id or the customer's name snapshotted in the JSON shippingAddress column
-  // (first query in this codebase to search inside a JSON column).
+  // not scoped to a caller. `search` matches the customer's first or last
+  // name snapshotted in `shippingAddress`, or an order id (the full 24-char
+  // id, or a hex fragment of at least 6 characters).
   async findAllForAdmin(
     query: AdminOrderQueryDto,
   ): Promise<PaginatedAdminOrders> {
     const { status, search, sort, page, limit } = query;
 
-    const qb = this.orderRepository.createQueryBuilder('order');
+    const filter: QueryFilter<Order> = {};
 
     if (status) {
-      qb.andWhere('order.status = :status', { status });
+      filter.status = status;
     }
 
     if (search) {
       const trimmed = search.trim();
-      // Escape LIKE wildcards so user input is matched literally
-      const escaped = escapeLike(trimmed);
-      const conditions = [
-        `JSON_UNQUOTE(JSON_EXTRACT(order.shippingAddress, '$.firstName')) LIKE :nameSearch`,
-        `JSON_UNQUOTE(JSON_EXTRACT(order.shippingAddress, '$.lastName')) LIKE :nameSearch`,
+      const nameRe = new RegExp(escapeRegex(trimmed), 'i');
+      const conditions: QueryFilter<Order>[] = [
+        { 'shippingAddress.firstName': nameRe },
+        { 'shippingAddress.lastName': nameRe },
       ];
-      const params: Record<string, unknown> = { nameSearch: `%${escaped}%` };
 
-      if (/^\d+$/.test(trimmed)) {
-        conditions.unshift('CAST(order.id AS CHAR) LIKE :idSearch');
-        params.idSearch = `%${escaped}%`;
+      if (/^[0-9a-fA-F]{6,24}$/.test(trimmed)) {
+        conditions.unshift({
+          $expr: {
+            $regexMatch: {
+              input: { $toString: '$_id' },
+              regex: trimmed.toLowerCase(),
+            },
+          },
+        });
       }
 
-      qb.andWhere(`(${conditions.join(' OR ')})`, params);
+      filter.$or = conditions;
     }
 
-    qb.orderBy('order.createdAt', sort === 'oldest' ? 'ASC' : 'DESC');
-    qb.skip((page - 1) * limit).take(limit);
-
-    const [[orders, total], globalStats] = await Promise.all([
-      qb.getManyAndCount(),
+    const direction = sort === 'oldest' ? 1 : -1;
+    const [orders, total, globalStats] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ createdAt: direction, _id: direction })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      this.orderModel.countDocuments(filter),
       this.getGlobalStats(),
     ]);
 
@@ -133,20 +147,14 @@ export class OrdersAdminService {
     shippedOrders: number;
     revenue: number;
   }> {
-    const [statusCounts, revenueResult] = await Promise.all([
-      this.orderRepository
-        .createQueryBuilder('order')
-        .select('order.status', 'status')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('order.status')
-        .getRawMany<{ status: OrderStatus; count: string }>(),
-      this.orderRepository
-        .createQueryBuilder('order')
-        .select('SUM(order.total)', 'sum')
-        .where('order.status != :cancelled', {
-          cancelled: OrderStatus.CANCELLED,
-        })
-        .getRawOne<{ sum: string | null }>(),
+    const [statusCounts, revenueRows] = await Promise.all([
+      this.orderModel.aggregate<{ _id: OrderStatus; count: number }>([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+      this.orderModel.aggregate<{ _id: null; sum: number }>([
+        { $match: { status: { $ne: OrderStatus.CANCELLED } } },
+        { $group: { _id: null, sum: { $sum: '$total' } } },
+      ]),
     ]);
 
     let totalOrders = 0;
@@ -155,49 +163,41 @@ export class OrdersAdminService {
     for (const row of statusCounts) {
       const count = Number(row.count);
       totalOrders += count;
-      if (row.status === OrderStatus.PENDING) pendingOrders = count;
-      if (row.status === OrderStatus.SHIPPED) shippedOrders = count;
+      if (row._id === OrderStatus.PENDING) pendingOrders = count;
+      if (row._id === OrderStatus.SHIPPED) shippedOrders = count;
     }
 
     return {
       totalOrders,
       pendingOrders,
       shippedOrders,
-      revenue: revenueResult?.sum ? Number(revenueResult.sum) : 0,
+      revenue: revenueRows[0]?.sum ? Number(revenueRows[0].sum) : 0,
     };
   }
 
   // Admin order detail (Story 5.4) — no ownership check (an admin may view
   // any order). customerEmail/customerPhone come from User, resolved via the
-  // UserService dependency this service already has, never a new relation on
-  // Order.
+  // UserService dependency this service already has, never a new reference
+  // on Order.
   async getOrderForAdmin(
-    orderId: number,
+    orderId: string,
   ): Promise<AdminOrderDetailResponseDto> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: { items: true },
-    });
-    if (!order) {
-      throw new NotFoundException('Không tìm thấy đơn hàng');
-    }
+    const order = await this.findOrderOrFail(orderId);
 
     const [user, productImageMap] = await Promise.all([
-      this.userService.findById(order.userId),
-      this.loadProductImageMap([order]),
+      this.userService.findById(order.userId.toString()),
+      loadProductImageMap(this.productModel, [order]),
     ]);
 
-    const withImages = {
-      ...order,
-      items: this.mapItemsWithImages(order.items, productImageMap),
+    return {
+      ...toOrderResponseDto(
+        order,
+        mapItemsWithImages(order, productImageMap, this.storageService),
+      ),
+      customerEmail: user?.email ?? null,
+      customerPhone: user?.phoneNumber ?? null,
+      paymentStatus: order.paymentReference ? 'paid' : 'unpaid',
     };
-
-    return this.toAdminOrderDetailResponseDto(
-      withImages,
-      user?.email ?? null,
-      user?.phoneNumber ?? null,
-      order.paymentReference,
-    );
   }
 
   // Admin forward-only status transition (Story 5.4). The epic's "the
@@ -207,15 +207,10 @@ export class OrdersAdminService {
   // skip-ahead, no backward, no transition touching CANCELLED — that status
   // is reachable only via cancelOrder()).
   async updateOrderStatus(
-    orderId: number,
+    orderId: string,
     status: OrderStatus,
   ): Promise<{ message: string }> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-    });
-    if (!order) {
-      throw new NotFoundException('Không tìm thấy đơn hàng');
-    }
+    const order = await this.findOrderOrFail(orderId);
 
     const currentIndex = FORWARD_STATUSES.indexOf(order.status);
     const nextIndex = FORWARD_STATUSES.indexOf(status);
@@ -223,13 +218,23 @@ export class OrdersAdminService {
       throw new BadRequestException('Chuyển trạng thái không hợp lệ');
     }
 
-    order.status = status;
     const now = new Date();
-    if (status === OrderStatus.CONFIRMED) order.confirmedAt = now;
-    if (status === OrderStatus.SHIPPED) order.shippedAt = now;
-    if (status === OrderStatus.DELIVERED) order.deliveredAt = now;
+    const set: Partial<Order> = { status };
+    if (status === OrderStatus.CONFIRMED) set.confirmedAt = now;
+    if (status === OrderStatus.SHIPPED) set.shippedAt = now;
+    if (status === OrderStatus.DELIVERED) set.deliveredAt = now;
 
-    const saved = await this.orderRepository.save(order);
+    // Compare-and-set on the status we validated against: if a concurrent
+    // request already advanced the order, this transition is no longer "one
+    // step forward" and is rejected instead of silently overwriting.
+    const saved = await this.orderModel.findOneAndUpdate(
+      { _id: order._id, status: order.status },
+      { $set: set },
+      { returnDocument: 'after' },
+    );
+    if (!saved) {
+      throw new BadRequestException('Chuyển trạng thái không hợp lệ');
+    }
     await this.dispatchStatusUpdateEmail(saved);
 
     return { message: 'Đã cập nhật trạng thái đơn hàng' };
@@ -238,50 +243,45 @@ export class OrdersAdminService {
   // Admin cancellation (Story 5.4) — pending-only, per the epic and the
   // PRD's "refund logic deferred; MVP documents refund intent" decision.
   // Never sets confirmedAt (a pending order never had one), which is what
-  // keeps AdminDashboardService.sumRevenueForMonth's `confirmedAt IS NOT
-  // NULL` revenue-exclusion assumption for cancelled orders holding true.
-  async cancelOrder(orderId: number): Promise<{ message: string }> {
-    // Status check + lock both live inside the transaction — otherwise two
-    // concurrent cancel requests both read PENDING via an unlocked findOne,
-    // both pass the check, and both restock the same order's items (double
-    // refund). Locking the order row first (before the product rows) forces
-    // the second request to block until the first commits its CANCELLED
-    // status, so its re-check of order.status below sees the update and
-    // rejects instead of restocking again.
-    const saved = await this.dataSource.transaction(async (manager) => {
-      const order = await manager.findOne(Order, {
-        where: { id: orderId },
-        lock: { mode: 'pessimistic_write' },
-      });
+  // keeps AdminDashboardService's `confirmedAt IS NOT NULL` revenue-exclusion
+  // assumption for cancelled orders holding true.
+  async cancelOrder(orderId: string): Promise<{ message: string }> {
+    // The PENDING -> CANCELLED claim and the restock live in one transaction.
+    // The claim is an atomic conditional update (`status: PENDING`), so of
+    // two concurrent cancel requests exactly one wins it; the other matches
+    // nothing and is rejected instead of restocking the same order's items a
+    // second time (double refund).
+    const saved = await runInTransaction(this.connection, async (session) => {
+      const order = isObjectIdString(orderId)
+        ? await this.orderModel.findOneAndUpdate(
+            { _id: orderId, status: OrderStatus.PENDING },
+            { $set: { status: OrderStatus.CANCELLED } },
+            { returnDocument: 'after', session },
+          )
+        : null;
+
       if (!order) {
-        throw new NotFoundException('Không tìm thấy đơn hàng');
-      }
-      if (order.status !== OrderStatus.PENDING) {
+        const exists = isObjectIdString(orderId)
+          ? await this.orderModel.exists({ _id: orderId }).session(session)
+          : null;
+        if (!exists) {
+          throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
         throw new BadRequestException(
           'Chỉ đơn hàng đang chờ xử lý mới có thể hủy',
         );
       }
 
-      const items = await manager.find(OrderItem, {
-        where: { orderId: order.id },
-      });
-      const productIds = items.map((i) => i.productId);
-      const products = await manager.find(Product, {
-        where: { id: In(productIds) },
-        lock: { mode: 'pessimistic_write' },
-      });
-      const byId = new Map(products.map((p) => [p.id, p]));
-
-      for (const item of items) {
-        const product = byId.get(item.productId);
-        if (product) {
-          product.stockQuantity += item.quantity;
-          await manager.save(product);
-        }
+      // Restock (as before, archived products are not touched).
+      for (const item of order.items) {
+        await this.productModel.updateOne(
+          { _id: item.productId, deletedAt: null },
+          { $inc: { stockQuantity: item.quantity } },
+          { session },
+        );
       }
 
-      order.status = OrderStatus.CANCELLED;
-      return await manager.save(order);
+      return order;
     });
 
     await this.dispatchStatusUpdateEmail(saved);
@@ -289,9 +289,19 @@ export class OrdersAdminService {
     return { message: 'Đã hủy đơn hàng' };
   }
 
-  private async dispatchStatusUpdateEmail(order: Order): Promise<void> {
+  private async findOrderOrFail(orderId: string): Promise<OrderDocument> {
+    const order = isObjectIdString(orderId)
+      ? await this.orderModel.findById(orderId)
+      : null;
+    if (!order) {
+      throw new NotFoundException('Không tìm thấy đơn hàng');
+    }
+    return order;
+  }
+
+  private async dispatchStatusUpdateEmail(order: OrderDocument): Promise<void> {
     try {
-      const user = await this.userService.findById(order.userId);
+      const user = await this.userService.findById(order.userId.toString());
       if (user) {
         this.mailService
           .sendOrderStatusUpdate(order, user.email)
@@ -312,59 +322,5 @@ export class OrdersAdminService {
         err instanceof Error ? err.stack : String(err),
       );
     }
-  }
-
-  private async loadProductImageMap(
-    orders: Order[],
-  ): Promise<Map<number, string[]>> {
-    const productIds = [
-      ...new Set(orders.flatMap((o) => o.items?.map((i) => i.productId) ?? [])),
-    ];
-    if (productIds.length === 0) return new Map();
-    const products = await this.dataSource.manager.find(Product, {
-      where: { id: In(productIds) },
-      select: ['id', 'imageKeys'],
-      withDeleted: true,
-    });
-    return new Map(products.map((p) => [p.id, p.imageKeys]));
-  }
-
-  private mapItemsWithImages(
-    items: OrderItem[],
-    productImageMap: Map<number, string[]>,
-  ): OrderItemWithImage[] {
-    return items.map((item) => ({
-      ...item,
-      productImageUrl: resolveFirstImageUrl(
-        productImageMap.get(item.productId),
-        this.storageService,
-      ),
-    }));
-  }
-
-  private toAdminOrderDetailResponseDto(
-    order: OrderWithItemImages,
-    customerEmail: string | null,
-    customerPhone: string | null,
-    paymentReference: string | null,
-  ): AdminOrderDetailResponseDto {
-    return {
-      id: order.id,
-      status: order.status,
-      subtotal: order.subtotal,
-      shippingFee: order.shippingFee,
-      tax: order.tax,
-      total: order.total,
-      shippingAddress: order.shippingAddress,
-      items: order.items,
-      confirmedAt: order.confirmedAt,
-      shippedAt: order.shippedAt,
-      deliveredAt: order.deliveredAt,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-      customerEmail,
-      customerPhone,
-      paymentStatus: paymentReference ? 'paid' : 'unpaid',
-    };
   }
 }

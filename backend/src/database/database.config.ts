@@ -1,32 +1,21 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { createDatabaseOptions } from './database-options';
-import { MigrationGuard } from './migration-guard';
 
+export const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/ecommerce';
+
+// Multi-document transactions (orders, cart, refresh-token rotation) require
+// a replica set — a standalone mongod will fail those operations. docker-compose
+// starts Mongo as a single-node replica set; use ?replicaSet=rs0 in the URI.
 @Module({
   imports: [
-    TypeOrmModule.forRootAsync({
+    MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        ...createDatabaseOptions({
-          DB_HOST: config.get<string>('DB_HOST'),
-          DB_PORT: config.get<string>('DB_PORT'),
-          DB_USERNAME: config.get<string>('DB_USERNAME'),
-          DB_PASSWORD: config.get<string>('DB_PASSWORD'),
-          DB_NAME: config.get<string>('DB_NAME'),
-        }),
-        autoLoadEntities: true,
-        // Migrations are intentionally NOT auto-run at startup.
-        // They must be applied manually via `pnpm migration:run` as part of
-        // the release process BEFORE deploying a new app version.
-        // MigrationGuard (registered below) enforces this by failing fast in
-        // production when pending migrations are detected.
-        migrationsRun: false,
+        uri: config.get<string>('MONGODB_URI') || DEFAULT_MONGODB_URI,
       }),
     }),
   ],
-  providers: [MigrationGuard],
 })
 export class DatabaseModule {}

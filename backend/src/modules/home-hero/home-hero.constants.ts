@@ -20,5 +20,5 @@ export const HOME_HERO_IMAGE_LIMITS: Record<
   grid: { min: 3, max: 3 },
 };
 
-// The table holds exactly one row, always at this id.
-export const HOME_HERO_ROW_ID = 1;
+// The collection holds exactly one document, always at this (string) _id.
+export const HOME_HERO_ROW_ID = 'home-hero';

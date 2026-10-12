@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -16,6 +15,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { UserPrincipal } from '../auth/strategies/jwt.strategy';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @ApiTags('orders')
 // Using global `api/` prefix (excludes /auth and /users for backward compatibility).
@@ -38,7 +38,7 @@ export class OrdersController {
 
   @Get(':id')
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser() user: UserPrincipal,
   ) {
     return {

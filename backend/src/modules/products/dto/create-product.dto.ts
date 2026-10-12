@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsInt,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -24,10 +25,8 @@ export class CreateProductDto {
   @MaxLength(5000, { message: 'Mô tả tối đa 5000 ký tự' })
   description!: string;
 
-  @Type(() => Number)
-  @IsInt({ message: 'Danh mục không hợp lệ' })
-  @Min(1, { message: 'Danh mục không hợp lệ' })
-  categoryId!: number;
+  @IsMongoId({ message: 'Danh mục không hợp lệ' })
+  categoryId!: string;
 
   @Type(() => Number)
   @IsNumber({}, { message: 'Giá phải là số' })

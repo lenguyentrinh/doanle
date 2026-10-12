@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import type { Model } from 'mongoose';
 import { LowStockAlert } from './entities/low-stock-alert.entity';
 import type { OrderCreatedPayload } from '../orders/order-events.types';
 
@@ -11,8 +11,8 @@ export class InventoryService {
   private readonly lowStockThreshold: number;
 
   constructor(
-    @InjectRepository(LowStockAlert)
-    private readonly lowStockAlertRepository: Repository<LowStockAlert>,
+    @InjectModel(LowStockAlert.name)
+    private readonly lowStockAlertModel: Model<LowStockAlert>,
     configService: ConfigService,
   ) {
     this.lowStockThreshold =
@@ -29,15 +29,13 @@ export class InventoryService {
       return;
     }
 
-    await this.lowStockAlertRepository.save(
-      lowStockItems.map((item) =>
-        this.lowStockAlertRepository.create({
-          orderId: payload.orderId,
-          productId: item.productId,
-          productName: item.productName,
-          remainingStock: item.remainingStock,
-        }),
-      ),
+    await this.lowStockAlertModel.insertMany(
+      lowStockItems.map((item) => ({
+        orderId: payload.orderId,
+        productId: item.productId,
+        productName: item.productName,
+        remainingStock: item.remainingStock,
+      })),
     );
     this.logger.log(
       `order ${payload.orderId}: low-stock alert saved for ${lowStockItems

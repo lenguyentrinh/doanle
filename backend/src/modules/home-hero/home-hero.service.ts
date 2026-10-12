@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import type { Model } from 'mongoose';
 import { StorageService } from '../../common/storage/storage.service';
 import { HomeHeroEntity } from './entities/home-hero.entity';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
@@ -23,13 +23,13 @@ export interface HomeHero {
 @Injectable()
 export class HomeHeroService {
   constructor(
-    @InjectRepository(HomeHeroEntity)
-    private readonly repo: Repository<HomeHeroEntity>,
+    @InjectModel(HomeHeroEntity.name)
+    private readonly model: Model<HomeHeroEntity>,
     private readonly storageService: StorageService,
   ) {}
 
   async get(): Promise<HomeHero | null> {
-    const row = await this.repo.findOne({ where: { id: HOME_HERO_ROW_ID } });
+    const row = await this.model.findById(HOME_HERO_ROW_ID);
     return row ? this.toHomeHero(row) : null;
   }
 
@@ -42,24 +42,32 @@ export class HomeHeroService {
           : `Mẫu "${dto.template}" cần từ ${min} đến ${max} hình ảnh`,
       );
     }
-    const previous = await this.repo.findOne({
-      where: { id: HOME_HERO_ROW_ID },
-    });
-    await this.repo.save(
-      this.repo.create({
-        id: HOME_HERO_ROW_ID,
-        template: dto.template,
-        eyebrow: dto.eyebrow,
-        title: dto.title,
-        subtitle: dto.subtitle,
-        primaryCta: { label: dto.primaryCta.label, href: dto.primaryCta.href },
-        secondaryCta: {
-          label: dto.secondaryCta.label,
-          href: dto.secondaryCta.href,
+    const previous = await this.model.findById(HOME_HERO_ROW_ID);
+    // Single-document upsert keyed by the fixed singleton id.
+    const saved = await this.model.findOneAndUpdate(
+      { _id: HOME_HERO_ROW_ID },
+      {
+        $set: {
+          template: dto.template,
+          eyebrow: dto.eyebrow,
+          title: dto.title,
+          subtitle: dto.subtitle,
+          primaryCta: {
+            label: dto.primaryCta.label,
+            href: dto.primaryCta.href,
+          },
+          secondaryCta: {
+            label: dto.secondaryCta.label,
+            href: dto.secondaryCta.href,
+          },
+          images: dto.images,
         },
-        images: dto.images,
-      }),
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
+    if (!saved) {
+      throw new Error('Failed to persist the home hero configuration');
+    }
     // Best-effort: delete uploaded images the new config no longer uses. Only
     // images that were in the previous row are candidates, so an upload not
     // yet saved (or one still referenced) is never touched.
@@ -71,9 +79,6 @@ export class HomeHeroService {
         .filter((key): key is string => key !== null)
         .map((key) => this.storageService.remove(key)),
     );
-    const saved = await this.repo.findOneOrFail({
-      where: { id: HOME_HERO_ROW_ID },
-    });
     return this.toHomeHero(saved);
   }
 
@@ -98,9 +103,12 @@ export class HomeHeroService {
       eyebrow: row.eyebrow,
       title: row.title,
       subtitle: row.subtitle,
-      primaryCta: row.primaryCta,
-      secondaryCta: row.secondaryCta,
-      images: row.images,
+      primaryCta: { label: row.primaryCta.label, href: row.primaryCta.href },
+      secondaryCta: {
+        label: row.secondaryCta.label,
+        href: row.secondaryCta.href,
+      },
+      images: [...row.images],
     };
   }
 }

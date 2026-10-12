@@ -1,46 +1,33 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Index,
-  Unique,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Product } from '../../products/entities/product.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 
-// One row per (user, product) — add-to-cart increments an existing row.
-@Entity('cart_items')
-@Unique('uq_cart_items_user_product', ['userId', 'productId'])
-@Index('idx_cart_items_user_id', ['userId'])
-@Index('idx_cart_items_product_id', ['productId'])
+// One document per (user, product) — add-to-cart increments an existing one.
+@Schema({ collection: 'cart_items', timestamps: true })
 export class CartItem {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column({ name: 'user_id' })
-  userId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  userId!: Types.ObjectId;
 
-  @Column({ name: 'product_id' })
-  productId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Product', required: true })
+  productId!: Types.ObjectId;
 
-  @Column({ type: 'int' })
+  @Prop({ required: true })
   quantity!: number;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user!: User;
-
-  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'product_id' })
-  product!: Product;
-
-  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }
+
+export type CartItemDocument = HydratedDocument<CartItem>;
+export const CartItemSchema = applyJsonTransform(
+  SchemaFactory.createForClass(CartItem),
+);
+CartItemSchema.index(
+  { userId: 1, productId: 1 },
+  { unique: true, name: 'uq_cart_items_user_product' },
+);
+CartItemSchema.index({ userId: 1 }, { name: 'idx_cart_items_user_id' });
+CartItemSchema.index({ productId: 1 }, { name: 'idx_cart_items_product_id' });

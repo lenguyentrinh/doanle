@@ -4,7 +4,7 @@
  * `imageKeys` are storage object keys only (filenames). They resolve to the
  * local placeholder SVG under `frontend/public/images/placeholders/` via the
  * read-time URL generation in ProductsService (PRODUCT_IMAGE_BASE_URL must be
- * "/images/placeholders" for this seed — the separate oren-products.sql seed
+ * "/images/placeholders" for this seed — the separate oren-products.seed.ts catalogue
  * needs "/images/products" instead; only run one against a given base URL).
  *
  * Deliberately one placeholder shared by every category rather than one file

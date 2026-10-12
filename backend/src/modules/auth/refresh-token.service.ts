@@ -1,16 +1,24 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import type { Connection, Model } from 'mongoose';
+import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { runInTransaction } from '../../common/database/transaction';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 
 interface RotateResult {
-  userId: number;
+  userId: string;
   raw: string;
 }
+
+type RotateOutcome =
+  | { kind: 'expired' | 'raced' }
+  | { kind: 'reused'; userId: string }
+  | { kind: 'rotated'; userId: string; raw: string };
 
 // Two requests can legitimately race to rotate the same refresh token — e.g.
 // several tabs of the same app all getting a 401 around the same moment and
@@ -25,42 +33,45 @@ export class RefreshTokenService {
   private readonly refreshExpiresIn: string;
 
   constructor(
-    @InjectRepository(RefreshToken)
-    private refreshTokenRepository: Repository<RefreshToken>,
+    @InjectModel(RefreshToken.name)
+    private refreshTokenModel: Model<RefreshToken>,
+    @InjectConnection()
+    private connection: Connection,
     private configService: ConfigService,
   ) {
     this.refreshExpiresIn =
       this.configService.get<string>('jwtRefresh.expiresIn') ?? '7d';
   }
 
-  // Raw tokens are opaque (not JWTs): `${rowId}.${secret}`. The id lets a
-  // refresh look up its exact row directly instead of scanning every live
-  // token for the user, and lets us tell "expired" apart from "reused"
-  // (a genuinely reused token matches a row that is already isRevoked).
+  // Raw tokens are opaque (not JWTs): `${rowId}.${secret}` (rowId = ObjectId
+  // hex). The id lets a refresh look up its exact row directly instead of
+  // scanning every live token for the user, and lets us tell "expired" apart
+  // from "reused" (a genuinely reused token matches a row that is already
+  // isRevoked).
   private generateSecret(): string {
     return randomBytes(48).toString('hex');
   }
 
   private parseRawToken(
     rawToken: string,
-  ): { id: number; secret: string } | null {
+  ): { id: string; secret: string } | null {
     const separatorIndex = rawToken.indexOf('.');
     if (separatorIndex <= 0) return null;
-    const id = Number(rawToken.slice(0, separatorIndex));
+    const id = rawToken.slice(0, separatorIndex);
     const secret = rawToken.slice(separatorIndex + 1);
-    if (!Number.isInteger(id) || !secret) return null;
+    if (!isObjectIdString(id) || !secret) return null;
     return { id, secret };
   }
 
-  async createRefreshToken(userId: number): Promise<string> {
+  async createRefreshToken(userId: string): Promise<string> {
     const secret = this.generateSecret();
     const hash = await bcrypt.hash(secret, 10);
     const expiresAt = new Date(
       Date.now() + this.parseExpiresIn(this.refreshExpiresIn),
     );
 
-    const saved = await this.refreshTokenRepository.save({
-      userId,
+    const saved = await this.refreshTokenModel.create({
+      userId: new Types.ObjectId(userId),
       tokenHash: hash,
       expiresAt,
     });
@@ -71,67 +82,89 @@ export class RefreshTokenService {
   // Verifies + rotates a refresh token. Never throws from inside the
   // transaction on the "reuse detected" path — revoking every token for the
   // user must survive even though we go on to reject this request, and a
-  // manager.transaction() callback that throws rolls back everything it did.
+  // transaction callback that throws rolls back everything it did.
+  //
+  // Concurrency: the old row is claimed with an atomic conditional update
+  // (`isRevoked: false` -> true) inside a transaction together with the
+  // insert of the replacement, so exactly one of N concurrent rotations of
+  // the same token wins; the rest observe the claim as lost and are treated
+  // as a benign race (or reuse, if outside the grace window).
   async rotateRefreshToken(rawToken: string): Promise<RotateResult> {
     const parsed = this.parseRawToken(rawToken);
     if (!parsed) {
       throw new UnauthorizedException('Refresh token không hợp lệ');
     }
 
-    const outcome = await this.refreshTokenRepository.manager.transaction(
-      async (manager) => {
-        const repo = manager.getRepository(RefreshToken);
-        const token = await repo.findOne({
-          where: { id: parsed.id },
-          lock: { mode: 'pessimistic_write' },
-        });
+    const token = await this.refreshTokenModel.findById(parsed.id);
+    if (!token || !(await bcrypt.compare(parsed.secret, token.tokenHash))) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
 
-        if (!token || !(await bcrypt.compare(parsed.secret, token.tokenHash))) {
-          return { kind: 'invalid' as const };
-        }
+    const userId = token.userId.toString();
+    const classifyRevoked = (revokedAt: Date | null): RotateOutcome => {
+      const revokedMsAgo = revokedAt
+        ? Date.now() - revokedAt.getTime()
+        : Infinity;
+      return revokedMsAgo < REUSE_GRACE_WINDOW_MS
+        ? { kind: 'raced' }
+        : { kind: 'reused', userId };
+    };
 
-        if (token.isRevoked) {
-          const revokedMsAgo = token.revokedAt
-            ? Date.now() - token.revokedAt.getTime()
-            : Infinity;
-          if (revokedMsAgo < REUSE_GRACE_WINDOW_MS) {
-            return { kind: 'raced' as const };
+    let outcome: RotateOutcome;
+    if (token.isRevoked) {
+      outcome = classifyRevoked(token.revokedAt);
+    } else if (token.expiresAt < new Date()) {
+      outcome = { kind: 'expired' };
+    } else {
+      const newSecret = this.generateSecret();
+      const newHash = await bcrypt.hash(newSecret, 10);
+      const expiresAt = new Date(
+        Date.now() + this.parseExpiresIn(this.refreshExpiresIn),
+      );
+      const replacementId = new Types.ObjectId();
+
+      outcome = await runInTransaction<RotateOutcome>(
+        this.connection,
+        async (session) => {
+          const claimed = await this.refreshTokenModel.findOneAndUpdate(
+            { _id: token._id, isRevoked: false },
+            {
+              $set: {
+                isRevoked: true,
+                revokedAt: new Date(),
+                replacedByTokenId: replacementId,
+              },
+            },
+            { session },
+          );
+          if (!claimed) {
+            // Lost the race: another request revoked it between our read and
+            // this update. Re-read to decide raced vs. reused.
+            const current = await this.refreshTokenModel
+              .findById(token._id)
+              .session(session);
+            return classifyRevoked(current?.revokedAt ?? null);
           }
-          return { kind: 'reused' as const, userId: token.userId };
-        }
 
-        if (token.expiresAt < new Date()) {
-          return { kind: 'expired' as const };
-        }
-
-        const newSecret = this.generateSecret();
-        const newHash = await bcrypt.hash(newSecret, 10);
-        const expiresAt = new Date(
-          Date.now() + this.parseExpiresIn(this.refreshExpiresIn),
-        );
-        const saved = await manager.save(RefreshToken, {
-          userId: token.userId,
-          tokenHash: newHash,
-          expiresAt,
-        });
-
-        await manager.update(
-          RefreshToken,
-          { id: token.id },
-          {
-            isRevoked: true,
-            revokedAt: new Date(),
-            replacedByTokenId: saved.id,
-          },
-        );
-
-        return {
-          kind: 'rotated' as const,
-          userId: token.userId,
-          raw: `${saved.id}.${newSecret}`,
-        };
-      },
-    );
+          await this.refreshTokenModel.create(
+            [
+              {
+                _id: replacementId,
+                userId: token.userId,
+                tokenHash: newHash,
+                expiresAt,
+              },
+            ],
+            { session },
+          );
+          return {
+            kind: 'rotated',
+            userId,
+            raw: `${replacementId.toHexString()}.${newSecret}`,
+          };
+        },
+      );
+    }
 
     if (outcome.kind === 'reused') {
       // Committed as its own operation so it survives the rejection below —
@@ -161,10 +194,10 @@ export class RefreshTokenService {
     return { userId: outcome.userId, raw: outcome.raw };
   }
 
-  async revokeAllUserTokens(userId: number): Promise<void> {
-    await this.refreshTokenRepository.update(
+  async revokeAllUserTokens(userId: string): Promise<void> {
+    await this.refreshTokenModel.updateMany(
       { userId, isRevoked: false },
-      { isRevoked: true },
+      { $set: { isRevoked: true } },
     );
   }
 
@@ -172,20 +205,20 @@ export class RefreshTokenService {
     if (!rawToken) return;
     const parsed = this.parseRawToken(rawToken);
     if (!parsed) return;
-    const token = await this.refreshTokenRepository.findOne({
-      where: { id: parsed.id },
-    });
+    const token = await this.refreshTokenModel.findById(parsed.id);
     if (!token) return;
-    await this.revokeAllUserTokens(token.userId);
+    await this.revokeAllUserTokens(token.userId.toString());
   }
 
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupExpired(): Promise<void> {
-    const result = await this.refreshTokenRepository.delete({
-      expiresAt: LessThan(new Date()),
+    const result = await this.refreshTokenModel.deleteMany({
+      expiresAt: { $lt: new Date() },
     });
-    if (result.affected && result.affected > 0) {
-      this.logger.log(`Cleaned up ${result.affected} expired refresh tokens`);
+    if (result.deletedCount > 0) {
+      this.logger.log(
+        `Cleaned up ${result.deletedCount} expired refresh tokens`,
+      );
     }
   }
 

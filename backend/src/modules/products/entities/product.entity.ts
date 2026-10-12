@@ -1,77 +1,64 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Index,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-} from 'typeorm';
-import { ColumnNumericTransformer } from '../../../common/utils/column-numeric.transformer';
-import { Category } from '../../categories/entities/category.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 
-@Entity('products')
-@Index('idx_products_category_id', ['categoryId'])
-@Index('idx_products_isActive', ['isActive'])
+@Schema({ collection: 'products', timestamps: true })
 export class Product {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column()
+  @Prop({ required: true })
   name!: string;
 
-  @Column({ type: 'text' })
+  @Prop({ required: true })
   description!: string;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  // Prices are VND amounts stored as plain numbers (BSON double).
+  @Prop({ required: true })
   price!: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Prop({ default: 0 })
   stockQuantity!: number;
 
   // Per-product discount, admin-editable one-at-a-time or in bulk. `null`
   // means "no discount configured" — distinct from `0`, which is a valid
   // (if pointless) 0% discount. See UpdateProductDto for the clear-vs-omit
   // convention used when this travels over multipart form fields.
-  @Column({
-    type: 'decimal',
-    precision: 5,
-    scale: 2,
-    nullable: true,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Prop({ type: Number, default: null })
   discountPercentage!: number | null;
 
-  @Column({ name: 'category_id' })
-  categoryId!: number;
-
-  @ManyToOne(() => Category, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'category_id' })
-  category!: Category;
+  // Referential integrity (ON DELETE RESTRICT in the old schema) is enforced
+  // in CategoriesService.remove().
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Category',
+    required: true,
+  })
+  categoryId!: Types.ObjectId;
 
   /**
    * Storage object keys only (e.g. "product-placeholder.svg") — NEVER full URLs.
    * Public URLs are generated at read time in ProductsService.
    */
-  @Column({ type: 'json' })
+  @Prop({ type: [String], default: [] })
   imageKeys!: string[];
 
-  @Column({ default: true })
+  @Prop({ default: true })
   isActive!: boolean;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt!: Date;
-
-  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  // Soft delete ("archived"): every storefront/admin lookup that used
+  // TypeORM's default soft-delete scope now filters `deletedAt: null`
+  // explicitly.
+  @Prop({ type: Date, default: null })
   deletedAt!: Date | null;
+
+  createdAt!: Date;
+  updatedAt!: Date;
 }
+
+export type ProductDocument = HydratedDocument<Product>;
+export const ProductSchema = applyJsonTransform(
+  SchemaFactory.createForClass(Product),
+);
+ProductSchema.index({ categoryId: 1 }, { name: 'idx_products_category_id' });
+ProductSchema.index({ isActive: 1 }, { name: 'idx_products_isActive' });

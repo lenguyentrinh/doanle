@@ -1,11 +1,9 @@
-import { IsInt, IsPositive, Max } from 'class-validator';
+import { IsInt, IsMongoId, IsPositive, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AddCartItemDto {
-  @Type(() => Number)
-  @IsInt({ message: 'productId phải là số nguyên' })
-  @IsPositive({ message: 'productId phải là số nguyên dương' })
-  productId!: number;
+  @IsMongoId({ message: 'productId không hợp lệ' })
+  productId!: string;
 
   @Type(() => Number)
   @IsInt({ message: 'quantity phải là số nguyên' })

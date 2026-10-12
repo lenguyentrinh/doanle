@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsInt,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -30,10 +31,8 @@ export class UpdateProductDto {
   description?: string;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'Danh mục không hợp lệ' })
-  @Min(1, { message: 'Danh mục không hợp lệ' })
-  categoryId?: number;
+  @IsMongoId({ message: 'Danh mục không hợp lệ' })
+  categoryId?: string;
 
   @IsOptional()
   @Type(() => Number)

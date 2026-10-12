@@ -1,8 +1,9 @@
 import { OrderStatus, ShippingAddressSnapshot } from '../entities/order.entity';
 
+// All ids are ObjectId hex strings.
 export class OrderItemResponseDto {
-  id!: number;
-  productId!: number;
+  id!: string;
+  productId!: string;
   productName!: string;
   price!: number;
   quantity!: number;
@@ -10,7 +11,7 @@ export class OrderItemResponseDto {
 }
 
 export class OrderResponseDto {
-  id!: number;
+  id!: string;
   status!: OrderStatus;
   subtotal!: number;
   shippingFee!: number;

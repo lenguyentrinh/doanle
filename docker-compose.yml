@@ -1,48 +1,47 @@
 services:
-  mysql:
-    image: mysql:8.0
+  mongo:
+    image: mongo:7
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-ecommerce}
+    # Single-node replica set: the backend uses multi-document transactions
+    # (orders, cart, refresh-token rotation), which MongoDB only supports on a
+    # replica set. --bind_ip_all lets other containers reach it.
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "3306:3306"
+      - "27017:27017"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mongo_data:/data/db
+    # Initiates the replica set on first run (rs.status() throws until then),
+    # and only reports healthy once this node is the writable primary.
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test:
+        - CMD-SHELL
+        - |
+          mongosh --quiet --eval "try { rs.status() } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }) }; quit(db.hello().isWritablePrimary ? 0 : 1)"
       interval: 5s
-      timeout: 5s
+      timeout: 10s
       retries: 20
+      start_period: 10s
 
   backend:
     build:
       context: ./backend
     restart: unless-stopped
-    # Loads JWT/Cloudinary secrets already kept in backend/.env; DB_* and
-    # PORT below are overridden because inside compose the backend must talk
-    # to the "mysql" service on the internal network, not the host DB used
-    # for local (non-docker) dev.
+    # Loads JWT/Cloudinary secrets already kept in backend/.env; MONGODB_URI
+    # and PORT below are overridden because inside compose the backend must
+    # talk to the "mongo" service on the internal network, not the host DB
+    # used for local (non-docker) dev.
     env_file:
       - ./backend/.env
     environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USERNAME: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME:-ecommerce}
+      MONGODB_URI: mongodb://mongo:27017/ecommerce?replicaSet=rs0
       PORT: 3000
       NODE_ENV: development
       FRONTEND_URL: http://localhost:8000
     depends_on:
-      mysql:
+      mongo:
         condition: service_healthy
     ports:
       - "3001:3000"
-    # typeorm's compiled CLI (a runtime dep, unlike the ts-node-based
-    # migration:run script) runs migrations against dist/ before nest starts,
-    # so a fresh mysql volume gets its schema without a manual step.
-    command: sh -c "node node_modules/typeorm/cli.js migration:run -d dist/database/data-source.js && node dist/main"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
       interval: 10s
@@ -67,4 +66,4 @@ services:
       - "8000:8000"
 
 volumes:
-  mysql_data:
+  mongo_data:

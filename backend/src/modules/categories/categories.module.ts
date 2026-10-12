@@ -1,11 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Category } from './entities/category.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Category, CategorySchema } from './entities/category.entity';
+import { Product, ProductSchema } from '../products/entities/product.entity';
 import { CategoriesService } from './categories.service';
 import { CategoriesAdminController } from './categories.admin.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Category.name, schema: CategorySchema },
+      // Registered here too so CategoriesService can count products (the
+      // same schema registered in ProductsModule; models are per-connection).
+      { name: Product.name, schema: ProductSchema },
+    ]),
+  ],
   controllers: [CategoriesAdminController],
   providers: [CategoriesService],
   exports: [CategoriesService],

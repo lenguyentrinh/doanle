@@ -15,7 +15,7 @@ pnpm install
 Create a `.env` file in the backend directory with the following variables:
 
 ```env
-DATABASE_URL=mysql://root:password@localhost:3306/ecommerce
+MONGODB_URI=mongodb://localhost:27017/ecommerce?directConnection=true
 JWT_SECRET_KEY=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
 NODE_ENV=development
@@ -77,7 +77,6 @@ Key endpoints:
 - `POST /auth/register` - User registration
 - `GET /products` - List products
 - `POST /orders` - Create order
-- `GET /users/:id` - Get user details
 
 ## Authentication
 
@@ -89,50 +88,26 @@ Authorization: Bearer <token>
 
 ## Database
 
-Uses MySQL for data persistence. See `../docs/data-models.md` for schema details.
+Uses MongoDB (via Mongoose / `@nestjs/mongoose`) for data persistence. The connection string comes from `MONGODB_URI` (falls back to `mongodb://localhost:27017/ecommerce`).
 
-### Database Migrations
+**A replica set is required.** Orders, cart and refresh-token rotation use multi-document transactions, which MongoDB only supports on a replica set (a single-node replica set is fine). `docker compose up mongo` from the repo root starts one (`rs0`). From the host use `?directConnection=true`; from inside the compose network use `?replicaSet=rs0`.
 
-> **⚠️ IMPORTANT — Required Release Step**
->
-> `migrationsRun` is intentionally set to `false`. Migrations are **never**
-> run automatically on startup. You **must** run `pnpm migration:run` manually
-> as part of every release that includes schema changes.
->
-> If this step is skipped, the application will start but behave incorrectly
-> (or crash) because the database schema does not match what the code expects.
-> In production, `MigrationGuard` detects this and **terminates the process**
-> before serving any traffic.
+### Schemas and ids
 
-#### Release Checklist (schema change)
+- Schemas live next to their module in `entities/*.entity.ts` (`@Schema` classes) and are registered with `MongooseModule.forFeature(...)`.
+- Every document is serialized with a shared transform (`src/common/database/schema-options.ts`): `_id` is exposed as a string `id` (ObjectId hex) and `_id` / `__v` never appear in responses.
+- Route params use `ParseObjectIdPipe`; DTO fields use `@IsMongoId` (invalid ids return 400, unknown ids 404).
+- Order items are embedded in the order document.
 
-```bash
-# 1. Check which migrations are pending
-pnpm migration:show
+### No migrations
 
-# 2. Apply all pending migrations
-pnpm migration:run
+There is no migration step. Collections are created lazily and Mongoose builds the declared indexes (unique email, `(userId, productId)` cart rows, `(userId, idempotencyKey)` orders, ...) on startup.
 
-# 3. (CI gate) Verify no migrations are left — exits 1 if any are pending
-pnpm migration:check
-
-# 4. Deploy the new application version
-```
-
-#### Common Migration Commands
+### Seeding
 
 ```bash
-# Generate a new migration from entity diff
-pnpm migration:generate src/database/migrations/<MigrationName>
-
-# Apply all pending migrations
-pnpm migration:run
-
-# Roll back the last applied migration
-pnpm migration:revert
-
-# List applied / pending migrations
-pnpm migration:show
+pnpm seed        # default demo catalogue (idempotent)
+pnpm seed:oren   # Oren catalogue (replaces existing products)
 ```
 
 ## Building for Production

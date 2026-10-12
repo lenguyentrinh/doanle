@@ -1,9 +1,9 @@
 /**
- * Escape MySQL LIKE wildcards (%, _) so user input is matched literally.
- * Default escape char in MySQL is backslash.
+ * Escape regular-expression metacharacters so user input is matched
+ * literally inside a `new RegExp(...)` built for a MongoDB `$regex` filter.
  */
-export function escapeLike(input: string): string {
-  return input.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+export function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**

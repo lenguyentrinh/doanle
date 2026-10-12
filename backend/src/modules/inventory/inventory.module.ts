@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { LowStockAlert } from './entities/low-stock-alert.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  LowStockAlert,
+  LowStockAlertSchema,
+} from './entities/low-stock-alert.entity';
 import { InventoryService } from './inventory.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([LowStockAlert])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: LowStockAlert.name, schema: LowStockAlertSchema },
+    ]),
+  ],
   providers: [InventoryService],
   exports: [InventoryService],
 })

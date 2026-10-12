@@ -4,23 +4,29 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, QueryFailedError, Repository } from 'typeorm';
-import { CartItem } from './entities/cart-item.entity';
-import { Product } from '../products/entities/product.entity';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import type { ClientSession, Connection, Model } from 'mongoose';
+import { Types, mongo } from 'mongoose';
+import { CartItem, CartItemDocument } from './entities/cart-item.entity';
+import { Product, ProductDocument } from '../products/entities/product.entity';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { MergeCartDto } from './dto/merge-cart.dto';
 import { StorageService } from '../../common/storage/storage.service';
 import { resolveFirstImageUrl } from '../../common/utils/image.utils';
 import { computeFinalPrice } from '../../common/utils/pricing.utils';
+import {
+  isDuplicateKeyError,
+  runInTransaction,
+} from '../../common/database/transaction';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 
 export interface CartLine {
-  // The cart_items row id — the frontend needs this to target
-  // PATCH/DELETE /api/cart/:itemId (NOT the product id below).
-  id: number;
+  // The cart item document id (ObjectId hex) — the frontend needs this to
+  // target PATCH/DELETE /api/cart/:itemId (NOT the product id below).
+  id: string;
   product: {
-    id: number;
+    id: string;
     name: string;
     // Original unit price — always the product's list price, discounted or
     // not. `finalPrice` is what the customer actually pays per unit; the
@@ -43,113 +49,67 @@ export interface CartView {
 @Injectable()
 export class CartService {
   constructor(
-    @InjectRepository(CartItem)
-    private readonly cartItemRepository: Repository<CartItem>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-    private readonly dataSource: DataSource,
+    @InjectModel(CartItem.name)
+    private readonly cartItemModel: Model<CartItem>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly storageService: StorageService,
   ) {}
 
   // Read the authenticated user's cart. Returns items even when a product is
   // inactive or out of stock (incl. soft-deleted) so the UI can warn (Story 3.3).
-  async getCart(userId: number): Promise<CartView> {
-    const items = await this.cartItemRepository.find({
-      where: { userId },
-      order: { id: 'ASC' },
-    });
-
-    if (items.length === 0) {
-      return { items: [], subtotal: 0 };
-    }
-
-    const productIds = items.map((i) => i.productId);
-    const products = await this.productRepository.find({
-      where: { id: In(productIds) },
-      withDeleted: true,
-    });
-    const byId = new Map(products.map((p) => [p.id, p]));
-
-    const lines: CartLine[] = [];
-    let subtotal = 0;
-
-    for (const item of items) {
-      const product = byId.get(item.productId);
-      // FK is ON DELETE CASCADE, so a hard-deleted product removes its cart
-      // rows; a missing product here means a data anomaly — skip defensively.
-      if (!product) continue;
-
-      const price = Number(product.price);
-      const finalPrice = computeFinalPrice(price, product.discountPercentage);
-      subtotal += finalPrice * item.quantity;
-
-      lines.push({
-        id: item.id,
-        product: {
-          id: product.id,
-          name: product.name,
-          price,
-          discountPercentage: product.discountPercentage,
-          finalPrice,
-          imageUrl: resolveFirstImageUrl(
-            product.imageKeys,
-            this.storageService,
-          ),
-          stockQuantity: product.stockQuantity,
-          isActive: product.isActive,
-        },
-        quantity: item.quantity,
-      });
-    }
-
-    return { items: lines, subtotal };
+  async getCart(userId: string): Promise<CartView> {
+    return this.buildCartView(userId, new Map());
   }
 
   // Add a product to the cart (or increment an existing line). Wrapped in a
-  // transaction so the stock check and the row upsert can't interleave with a
-  // concurrent add and overbook (carry-forward from the 1.5 atomicity finding).
-  async addItem(userId: number, dto: AddCartItemDto): Promise<CartView> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
+  // transaction so the stock check and the document upsert can't interleave
+  // with a concurrent add and overbook (carry-forward from the 1.5 atomicity
+  // finding). Concurrent writers to the same cart line conflict inside the
+  // transaction and are retried against fresh data.
+  async addItem(userId: string, dto: AddCartItemDto): Promise<CartView> {
     try {
-      const product = await queryRunner.manager.findOne(Product, {
-        where: { id: dto.productId, isActive: true },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!product) {
-        throw new NotFoundException(`Không tìm thấy sản phẩm ${dto.productId}`);
-      }
+      await this.withDuplicateRetry(() =>
+        runInTransaction(this.connection, async (session) => {
+          const product = await this.productModel
+            .findOne({ _id: dto.productId, isActive: true, deletedAt: null })
+            .session(session);
+          if (!product) {
+            throw new NotFoundException(
+              `Không tìm thấy sản phẩm ${dto.productId}`,
+            );
+          }
 
-      const existing = await queryRunner.manager.findOne(CartItem, {
-        where: { userId, productId: dto.productId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      const targetQuantity = (existing?.quantity ?? 0) + dto.quantity;
+          const existing = await this.cartItemModel
+            .findOne({ userId, productId: dto.productId })
+            .session(session);
+          const targetQuantity = (existing?.quantity ?? 0) + dto.quantity;
 
-      if (targetQuantity > product.stockQuantity) {
-        throw new BadRequestException('Không đủ hàng tồn kho');
-      }
+          if (targetQuantity > product.stockQuantity) {
+            throw new BadRequestException('Không đủ hàng tồn kho');
+          }
 
-      if (existing) {
-        existing.quantity = targetQuantity;
-        await queryRunner.manager.save(existing);
-      } else {
-        const item = queryRunner.manager.create(CartItem, {
-          userId,
-          productId: dto.productId,
-          quantity: dto.quantity,
-        });
-        await queryRunner.manager.save(item);
-      }
-
-      await queryRunner.commitTransaction();
+          if (existing) {
+            existing.quantity = targetQuantity;
+            await existing.save({ session });
+          } else {
+            await this.cartItemModel.create(
+              [
+                {
+                  userId: new Types.ObjectId(userId),
+                  productId: new Types.ObjectId(dto.productId),
+                  quantity: dto.quantity,
+                },
+              ],
+              { session },
+            );
+          }
+        }),
+      );
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw this.toHttpException(error);
-    } finally {
-      await queryRunner.release();
     }
 
     return this.getCart(userId);
@@ -157,62 +117,48 @@ export class CartService {
 
   // Update a cart line's quantity. quantity === 0 removes the line.
   async updateItem(
-    userId: number,
-    itemId: number,
+    userId: string,
+    itemId: string,
     dto: UpdateCartItemDto,
   ): Promise<CartView> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
-      // Lock the cart item row inside the transaction so a concurrent update
-      // (e.g. quantity change from another tab) does not cause a lost write.
-      const item = await queryRunner.manager.findOne(CartItem, {
-        where: { id: itemId },
-        lock: { mode: 'pessimistic_write' },
+      await runInTransaction(this.connection, async (session) => {
+        // Read inside the transaction so a concurrent update (e.g. quantity
+        // change from another tab) conflicts and retries instead of causing
+        // a lost write.
+        const item = await this.findOwnedItem(userId, itemId, session);
+
+        if (dto.quantity === 0) {
+          await item.deleteOne({ session });
+          return;
+        }
+
+        const product = await this.productModel
+          .findOne({ _id: item.productId, isActive: true, deletedAt: null })
+          .session(session);
+        if (!product) {
+          throw new NotFoundException(
+            'Không tìm thấy sản phẩm hoặc đã ngừng kinh doanh',
+          );
+        }
+        if (dto.quantity > product.stockQuantity) {
+          throw new BadRequestException('Không đủ hàng tồn kho');
+        }
+
+        item.quantity = dto.quantity;
+        await item.save({ session });
       });
-      if (!item || item.userId !== userId) {
-        throw new NotFoundException('Không tìm thấy sản phẩm trong giỏ hàng');
-      }
-
-      if (dto.quantity === 0) {
-        await queryRunner.manager.remove(item);
-        await queryRunner.commitTransaction();
-        return this.getCart(userId);
-      }
-
-      const product = await queryRunner.manager.findOne(Product, {
-        where: { id: item.productId, isActive: true },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!product) {
-        throw new NotFoundException(
-          'Không tìm thấy sản phẩm hoặc đã ngừng kinh doanh',
-        );
-      }
-      if (dto.quantity > product.stockQuantity) {
-        throw new BadRequestException('Không đủ hàng tồn kho');
-      }
-
-      item.quantity = dto.quantity;
-      await queryRunner.manager.save(item);
-
-      await queryRunner.commitTransaction();
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw this.toHttpException(error);
-    } finally {
-      await queryRunner.release();
     }
 
     return this.getCart(userId);
   }
 
-  async removeItem(userId: number, itemId: number): Promise<CartView> {
+  async removeItem(userId: string, itemId: string): Promise<CartView> {
     const item = await this.findOwnedItem(userId, itemId);
     try {
-      await this.cartItemRepository.remove(item);
+      await item.deleteOne();
     } catch (error) {
       throw this.toHttpException(error);
     }
@@ -220,126 +166,118 @@ export class CartService {
   }
 
   // Merge a guest (localStorage) cart into the server cart after login.
-  // Batches product + existing-item lookups and saves instead of N+1
-  // per line (2 locked SELECT + save each). Runs in a transaction.
-  // Reuses the already-loaded product data to avoid an extra getCart call.
-  async mergeCart(userId: number, dto: MergeCartDto): Promise<CartView> {
+  // Batches product + existing-item lookups and writes (one bulkWrite)
+  // instead of N+1 per line. Runs in a transaction. Reuses the already-loaded
+  // product data to avoid an extra lookup when building the response.
+  async mergeCart(userId: string, dto: MergeCartDto): Promise<CartView> {
     if (!dto.items || dto.items.length === 0) {
       return this.getCart(userId);
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    let mergedProductMap: Map<number, Product>;
+    let mergedProductMap: Map<string, ProductDocument>;
 
     try {
-      const mergeProductIds = dto.items.map((i) => i.productId);
-      const products = await queryRunner.manager.find(Product, {
-        where: { id: In(mergeProductIds) },
-        lock: { mode: 'pessimistic_write' },
-      });
-      mergedProductMap = new Map(products.map((p) => [p.id, p]));
+      mergedProductMap = await this.withDuplicateRetry(() =>
+        runInTransaction(this.connection, async (session) => {
+          const mergeProductIds = [
+            ...new Set(dto.items.map((i) => i.productId)),
+          ];
+          const products = await this.productModel
+            .find({ _id: { $in: mergeProductIds }, deletedAt: null })
+            .session(session);
+          const productMap = new Map(products.map((p) => [p.id, p]));
 
-      const existingItems = await queryRunner.manager.find(CartItem, {
-        where: { userId, productId: In(mergeProductIds) },
-        lock: { mode: 'pessimistic_write' },
-      });
-      const existingByProductId = new Map(
-        existingItems.map((i) => [i.productId, i]),
-      );
-
-      // Dedupe/aggregate merge items by productId — the guest cart may contain
-      // multiple entries for the same product (e.g. re-added before sync).
-      // Without this aggregation, the 2nd+ entry for a productId would violate
-      // the unique constraint `uq_cart_items_user_product`.
-      const aggregated = new Map<number, number>();
-      for (const mergeItem of dto.items) {
-        aggregated.set(
-          mergeItem.productId,
-          (aggregated.get(mergeItem.productId) ?? 0) + mergeItem.quantity,
-        );
-      }
-
-      const toSave: CartItem[] = [];
-
-      for (const [productId, quantity] of aggregated) {
-        const product = mergedProductMap.get(productId);
-        if (!product || !product.isActive || product.stockQuantity <= 0) {
-          continue;
-        }
-
-        const existing = existingByProductId.get(productId);
-        const targetQuantity = Math.min(
-          (existing?.quantity ?? 0) + quantity,
-          product.stockQuantity,
-        );
-
-        if (existing) {
-          existing.quantity = targetQuantity;
-          toSave.push(existing);
-        } else {
-          toSave.push(
-            queryRunner.manager.create(CartItem, {
-              userId,
-              productId,
-              quantity: targetQuantity,
-            }),
+          const existingItems = await this.cartItemModel
+            .find({ userId, productId: { $in: mergeProductIds } })
+            .session(session);
+          const existingByProductId = new Map(
+            existingItems.map((i) => [i.productId.toString(), i]),
           );
-        }
-      }
 
-      if (toSave.length > 0) {
-        await queryRunner.manager.save(toSave);
-      }
+          // Dedupe/aggregate merge items by productId — the guest cart may
+          // contain multiple entries for the same product (e.g. re-added
+          // before sync). Without this aggregation, the 2nd+ entry for a
+          // productId would violate the unique index
+          // `uq_cart_items_user_product`.
+          const aggregated = new Map<string, number>();
+          for (const mergeItem of dto.items) {
+            const key = String(mergeItem.productId).toLowerCase();
+            aggregated.set(
+              key,
+              (aggregated.get(key) ?? 0) + mergeItem.quantity,
+            );
+          }
 
-      await queryRunner.commitTransaction();
+          const ops: Parameters<Model<CartItem>['bulkWrite']>[0] = [];
+
+          for (const [productId, quantity] of aggregated) {
+            const product = productMap.get(productId);
+            if (!product || !product.isActive || product.stockQuantity <= 0) {
+              continue;
+            }
+
+            const existing = existingByProductId.get(productId);
+            const targetQuantity = Math.min(
+              (existing?.quantity ?? 0) + quantity,
+              product.stockQuantity,
+            );
+
+            if (existing) {
+              ops.push({
+                updateOne: {
+                  filter: { _id: existing._id },
+                  update: { $set: { quantity: targetQuantity } },
+                },
+              });
+            } else {
+              ops.push({
+                insertOne: {
+                  document: {
+                    userId: new Types.ObjectId(userId),
+                    productId: new Types.ObjectId(productId),
+                    quantity: targetQuantity,
+                  },
+                },
+              });
+            }
+          }
+
+          if (ops.length > 0) {
+            await this.cartItemModel.bulkWrite(ops, { session });
+          }
+
+          return productMap;
+        }),
+      );
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw this.toHttpException(error);
-    } finally {
-      await queryRunner.release();
     }
 
     // Build cart view from already-loaded products + remaining items
-    // instead of calling getCart() which would re-query everything.
-    return this.buildCartView(userId, mergedProductMap!);
+    // instead of re-querying everything.
+    return this.buildCartView(userId, mergedProductMap);
   }
 
-  // Lightweight cart view builder that reuses pre-loaded product data.
-  // Loads only cart items (1 query) and fills product details from
-  // knownProductMap where possible, querying only unknown products.
+  // Cart view builder that reuses pre-loaded product data. Loads the cart
+  // items (1 query) and fills product details from knownProductMap where
+  // possible, querying only unknown products (archived ones included).
   private async buildCartView(
-    userId: number,
-    knownProductMap: Map<number, Product>,
+    userId: string,
+    knownProductMap: Map<string, ProductDocument>,
   ): Promise<CartView> {
-    const items = await this.cartItemRepository.find({
-      where: { userId },
-      order: { id: 'ASC' },
-    });
+    const items = await this.cartItemModel.find({ userId }).sort({ _id: 1 });
 
     if (items.length === 0) {
       return { items: [], subtotal: 0 };
     }
 
     const unknownIds = items
-      .map((i) => i.productId)
+      .map((i) => i.productId.toString())
       .filter((id) => !knownProductMap.has(id));
 
     if (unknownIds.length > 0) {
-      const unknownProducts = await this.productRepository.find({
-        where: { id: In(unknownIds) },
-        withDeleted: true,
-        select: [
-          'id',
-          'name',
-          'price',
-          'discountPercentage',
-          'imageKeys',
-          'stockQuantity',
-          'isActive',
-        ],
+      const unknownProducts = await this.productModel.find({
+        _id: { $in: unknownIds },
       });
       for (const p of unknownProducts) {
         knownProductMap.set(p.id, p);
@@ -350,11 +288,14 @@ export class CartService {
     let subtotal = 0;
 
     for (const item of items) {
-      const product = knownProductMap.get(item.productId);
+      const product = knownProductMap.get(item.productId.toString());
+      // Hard-deleting a product used to cascade to its cart rows; here a
+      // missing product means a data anomaly — skip defensively.
       if (!product) continue;
 
       const price = Number(product.price);
-      const finalPrice = computeFinalPrice(price, product.discountPercentage);
+      const discountPercentage = product.discountPercentage ?? null;
+      const finalPrice = computeFinalPrice(price, discountPercentage);
       subtotal += finalPrice * item.quantity;
 
       lines.push({
@@ -363,7 +304,7 @@ export class CartService {
           id: product.id,
           name: product.name,
           price,
-          discountPercentage: product.discountPercentage,
+          discountPercentage,
           finalPrice,
           imageUrl: resolveFirstImageUrl(
             product.imageKeys,
@@ -381,16 +322,29 @@ export class CartService {
 
   // Ownership check — never leak another user's rows (generic 404).
   private async findOwnedItem(
-    userId: number,
-    itemId: number,
-  ): Promise<CartItem> {
-    const item = await this.cartItemRepository.findOne({
-      where: { id: itemId },
-    });
-    if (!item || item.userId !== userId) {
+    userId: string,
+    itemId: string,
+    session?: ClientSession,
+  ): Promise<CartItemDocument> {
+    const item = isObjectIdString(itemId)
+      ? await this.cartItemModel.findById(itemId).session(session ?? null)
+      : null;
+    if (!item || item.userId.toString() !== String(userId)) {
       throw new NotFoundException('Không tìm thấy sản phẩm trong giỏ hàng');
     }
     return item;
+  }
+
+  // Two concurrent first-time adds of the same product can both try to insert
+  // the (userId, productId) row; the loser hits the unique index. Re-running
+  // the whole operation turns it into the normal "increment existing" path.
+  private async withDuplicateRetry<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (isDuplicateKeyError(error)) return fn();
+      throw error;
+    }
   }
 
   // Preserve HTTP exceptions; convert DB-level failures to a clean 400.
@@ -398,7 +352,7 @@ export class CartService {
     if (error instanceof HttpException) {
       return error;
     }
-    if (error instanceof QueryFailedError) {
+    if (error instanceof mongo.MongoServerError) {
       return new BadRequestException('Thao tác giỏ hàng thất bại');
     }
     return error;

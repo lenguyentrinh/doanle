@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -26,6 +25,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { BulkDiscountDto } from './dto/bulk-discount.dto';
 import { MulterExceptionFilter } from './filters/multer-exception.filter';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -100,7 +100,7 @@ export class ProductsAdminController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return { data: await this.productsService.getByIdForAdmin(id) };
   }
 
@@ -122,7 +122,7 @@ export class ProductsAdminController {
 
   // Must be declared before `@Patch(':id')` below — Nest/Express registers
   // routes in declaration order, and `:id` would otherwise swallow requests
-  // to `discount/bulk` (ParseIntPipe would then 400 on "discount").
+  // to `discount/bulk` (ParseObjectIdPipe would then 400 on "discount").
   @Patch('discount/bulk')
   async applyBulkDiscount(@Body() dto: BulkDiscountDto) {
     return this.productsService.applyBulkDiscount(
@@ -136,7 +136,7 @@ export class ProductsAdminController {
     FilesInterceptor('images', MAX_FILES, IMAGES_INTERCEPTOR_OPTIONS),
   )
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Body() dto: UpdateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
@@ -146,7 +146,7 @@ export class ProductsAdminController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id', ParseObjectIdPipe) id: string) {
     return this.productsService.deleteProduct(id);
   }
 }

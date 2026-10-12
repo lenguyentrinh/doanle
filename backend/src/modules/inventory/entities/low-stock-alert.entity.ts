@@ -1,32 +1,37 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  Index,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import type { HydratedDocument } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
+import { applyJsonTransform } from '../../../common/database/schema-options';
 
-// Maps to the low_stock_alerts table created by the CreateLowStockAlerts
-// migration. No FK to orders/products — this is a standalone alert log, not
-// a joined view of order/product state.
-@Entity('low_stock_alerts')
-@Index('idx_low_stock_alerts_product_id', ['productId'])
+// Standalone alert log — no reference enforcement to orders/products, not a
+// joined view of order/product state.
+@Schema({
+  collection: 'low_stock_alerts',
+  timestamps: { createdAt: true, updatedAt: false },
+})
 export class LowStockAlert {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  id!: string;
 
-  @Column({ name: 'order_id' })
-  orderId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  orderId!: Types.ObjectId;
 
-  @Column({ name: 'product_id' })
-  productId!: number;
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  productId!: Types.ObjectId;
 
-  @Column({ name: 'product_name' })
+  @Prop({ required: true })
   productName!: string;
 
-  @Column({ name: 'remaining_stock' })
+  @Prop({ required: true })
   remainingStock!: number;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt!: Date;
 }
+
+export type LowStockAlertDocument = HydratedDocument<LowStockAlert>;
+export const LowStockAlertSchema = applyJsonTransform(
+  SchemaFactory.createForClass(LowStockAlert),
+);
+LowStockAlertSchema.index(
+  { productId: 1 },
+  { name: 'idx_low_stock_alerts_product_id' },
+);

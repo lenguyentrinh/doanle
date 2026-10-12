@@ -3,18 +3,24 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import type { QueryFilter, Model, PipelineStage } from 'mongoose';
+import { Types } from 'mongoose';
 import { Category } from './entities/category.entity';
+import { Product } from '../products/entities/product.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AdminCategoryQueryDto } from './dto/admin-category-query.dto';
-import { escapeLike, toSlug } from '../../common/utils/string.utils';
+import { escapeRegex, toSlug } from '../../common/utils/string.utils';
+import { isDuplicateKeyError } from '../../common/database/transaction';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 
 export interface AdminCategoryResponse {
-  id: number;
+  id: string;
   name: string;
   slug: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   productCount: number;
 }
 
@@ -32,62 +38,73 @@ export interface PaginatedAdminCategories {
   orphanCount: number;
 }
 
+// Case-insensitive ordering, matching the previous MySQL collation.
+const NAME_COLLATION = { locale: 'en', strength: 2 } as const;
+
 @Injectable()
 export class CategoriesService {
   constructor(
-    @InjectRepository(Category)
-    private readonly categoriesRepository: Repository<Category>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<Category>,
+    // Read-only access to products for counts/referential checks (archived
+    // products included — the raw `products` collection, no soft-delete scope).
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
   ) {}
+
+  private searchFilter(search?: string): QueryFilter<Category> {
+    if (!search) return {};
+    const re = new RegExp(escapeRegex(search), 'i');
+    return { $or: [{ name: re }, { slug: re }] };
+  }
 
   async findAllForAdmin(
     query: AdminCategoryQueryDto,
   ): Promise<PaginatedAdminCategories> {
     const { search, sort, page, limit } = query;
 
-    const qb = this.categoriesRepository
-      .createQueryBuilder('category')
-      .leftJoin('products', 'product', 'product.category_id = category.id')
-      .select('category.id', 'id')
-      .addSelect('category.name', 'name')
-      .addSelect('category.slug', 'slug')
-      .addSelect('COUNT(product.id)', 'productCount')
-      .groupBy('category.id');
+    const pipeline: PipelineStage[] = [
+      { $match: this.searchFilter(search) },
+      {
+        $lookup: {
+          from: this.productModel.collection.name,
+          localField: '_id',
+          foreignField: 'categoryId',
+          pipeline: [{ $count: 'n' }],
+          as: 'pc',
+        },
+      },
+      {
+        $addFields: {
+          productCount: { $ifNull: [{ $first: '$pc.n' }, 0] },
+        },
+      },
+      {
+        $sort:
+          sort === 'count'
+            ? { productCount: -1, name: 1, _id: 1 }
+            : { name: 1, _id: 1 },
+      },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ];
 
-    if (search) {
-      const escaped = escapeLike(search);
-      qb.andWhere(
-        '(category.name LIKE :search OR category.slug LIKE :search)',
-        { search: `%${escaped}%` },
-      );
-    }
-
-    if (sort === 'count') {
-      qb.orderBy('productCount', 'DESC').addOrderBy('category.name', 'ASC');
-    } else {
-      qb.orderBy('category.name', 'ASC');
-    }
-
-    // GROUP BY means getManyAndCount()'s single-query count would count
-    // grouped rows, not matching categories — .limit()/.offset() (not
-    // .skip()/.take()) apply LIMIT/OFFSET to the grouped result set itself,
-    // and the filtered total is counted separately below.
-    qb.limit(limit).offset((page - 1) * limit);
-
-    const rows = await qb.getRawMany<{
-      id: number;
-      name: string;
-      slug: string;
-      productCount: string;
-    }>();
-
-    const [total, globalStats] = await Promise.all([
-      this.countFiltered(search),
+    const [rows, total, globalStats] = await Promise.all([
+      this.categoryModel
+        .aggregate<{
+          _id: Types.ObjectId;
+          name: string;
+          slug: string;
+          productCount: number;
+        }>(pipeline)
+        .collation(NAME_COLLATION),
+      this.categoryModel.countDocuments(this.searchFilter(search)),
       this.getGlobalStats(),
     ]);
 
     return {
       data: rows.map((r) => ({
-        id: r.id,
+        id: r._id.toString(),
         name: r.name,
         slug: r.slug,
         productCount: Number(r.productCount),
@@ -99,80 +116,71 @@ export class CategoriesService {
     };
   }
 
-  // Counts categories matching `search` alone (no join needed — name/slug
-  // live on the category row itself), independent of the grouped/paginated
-  // query above.
-  private async countFiltered(search?: string): Promise<number> {
-    const qb = this.categoriesRepository.createQueryBuilder('category');
-    if (search) {
-      const escaped = escapeLike(search);
-      qb.andWhere(
-        '(category.name LIKE :search OR category.slug LIKE :search)',
-        { search: `%${escaped}%` },
-      );
-    }
-    return qb.getCount();
-  }
-
   // Whole-catalog counters for the admin grid's header chips — always
-  // unfiltered/unpaginated. Joins the raw `products` table (like
-  // countProducts()) rather than the Product repository, so archived
+  // unfiltered/unpaginated. Counts the raw products collection, so archived
   // (soft-deleted) products still count — same rationale as countProducts.
   private async getGlobalStats(): Promise<{
     totalCategories: number;
     totalProducts: number;
     orphanCount: number;
   }> {
-    const [totalCategories, totalProductsResult, orphanResult] =
-      await Promise.all([
-        this.categoriesRepository.count(),
-        this.categoriesRepository.manager
-          .createQueryBuilder()
-          .select('COUNT(*)', 'count')
-          .from('products', 'product')
-          .getRawOne<{ count: string }>(),
-        this.categoriesRepository
-          .createQueryBuilder('category')
-          .leftJoin('products', 'product', 'product.category_id = category.id')
-          .select('COUNT(*)', 'count')
-          .where('product.id IS NULL')
-          .getRawOne<{ count: string }>(),
-      ]);
+    const [totalCategories, totalProducts, usedCategoryIds] = await Promise.all(
+      [
+        this.categoryModel.countDocuments(),
+        this.productModel.countDocuments(),
+        this.productModel.distinct('categoryId'),
+      ],
+    );
+    const orphanCount = await this.categoryModel.countDocuments({
+      _id: { $nin: usedCategoryIds },
+    });
 
-    return {
-      totalCategories,
-      totalProducts: Number(totalProductsResult?.count ?? 0),
-      orphanCount: Number(orphanResult?.count ?? 0),
-    };
+    return { totalCategories, totalProducts, orphanCount };
   }
 
   // Distinct category names with at least one *active* product — feeds the
   // shopper-facing PLP filter/category list (ProductsService.getCategories()).
   async findNamesForStorefront(): Promise<string[]> {
-    const rows = await this.categoriesRepository
-      .createQueryBuilder('category')
-      .innerJoin(
-        'products',
-        'product',
-        'product.category_id = category.id AND product.isActive = :isActive',
-        { isActive: true },
-      )
-      .select('DISTINCT category.name', 'name')
-      .orderBy('category.name', 'ASC')
-      .getRawMany<{ name: string }>();
+    const categoryIds = await this.productModel.distinct('categoryId', {
+      isActive: true,
+    });
+    const rows = await this.categoryModel
+      .find({ _id: { $in: categoryIds } }, { name: 1 })
+      .sort({ name: 1 })
+      .collation(NAME_COLLATION)
+      .lean();
 
     return rows.map((r) => r.name);
   }
 
-  async create(dto: CreateCategoryDto): Promise<AdminCategoryResponse> {
-    const category = this.categoriesRepository.create({
-      name: dto.name,
-      slug: toSlug(dto.name),
-    });
+  // Resolves category ids to names (used to build product responses, which
+  // expose the category *name* rather than the raw id).
+  async findNamesByIds(
+    ids: (Types.ObjectId | string)[],
+  ): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.categoryModel
+      .find({ _id: { $in: ids } }, { name: 1 })
+      .lean();
+    return new Map(rows.map((r) => [r._id.toString(), r.name]));
+  }
 
+  // Exact (case-insensitive) name lookup for the storefront category filter.
+  async findIdByName(name: string): Promise<Types.ObjectId | null> {
+    const row = await this.categoryModel
+      .findOne({ name }, { _id: 1 })
+      .collation(NAME_COLLATION)
+      .lean();
+    return row?._id ?? null;
+  }
+
+  async create(dto: CreateCategoryDto): Promise<AdminCategoryResponse> {
     try {
-      const saved = await this.categoriesRepository.save(category);
-      return { ...saved, productCount: 0 };
+      const saved = await this.categoryModel.create({
+        name: dto.name,
+        slug: toSlug(dto.name),
+      });
+      return this.toResponse(saved, 0);
     } catch (error) {
       this.rethrowIfDuplicate(error);
       throw error;
@@ -180,36 +188,28 @@ export class CategoriesService {
   }
 
   async rename(
-    id: number,
+    id: string,
     dto: UpdateCategoryDto,
   ): Promise<AdminCategoryResponse> {
-    const category = await this.categoriesRepository.findOne({
-      where: { id },
-    });
-    if (!category) {
-      throw new NotFoundException(`Không tìm thấy danh mục ${id}`);
-    }
+    const category = await this.findOrFail(id);
 
     category.name = dto.name;
     category.slug = toSlug(dto.name);
 
     try {
-      const saved = await this.categoriesRepository.save(category);
+      const saved = await category.save();
       const productCount = await this.countProducts(id);
-      return { ...saved, productCount };
+      return this.toResponse(saved, productCount);
     } catch (error) {
       this.rethrowIfDuplicate(error);
       throw error;
     }
   }
 
-  async remove(id: number): Promise<{ message: string }> {
-    const category = await this.categoriesRepository.findOne({
-      where: { id },
-    });
-    if (!category) {
-      throw new NotFoundException(`Không tìm thấy danh mục ${id}`);
-    }
+  // Emulates the old `products.category_id ... ON DELETE RESTRICT` FK: a
+  // category that any product (archived included) still references can't go.
+  async remove(id: string): Promise<{ message: string }> {
+    const category = await this.findOrFail(id);
 
     const productCount = await this.countProducts(id);
     if (productCount > 0) {
@@ -218,43 +218,60 @@ export class CategoriesService {
       );
     }
 
-    await this.categoriesRepository.remove(category);
+    await category.deleteOne();
     return { message: 'Đã xoá danh mục' };
   }
 
-  // Used by ProductsService before create/update — turns a raw FK-constraint
-  // failure into a friendly 400/404 at the point of submission.
-  async assertExists(id: number): Promise<void> {
-    const exists = await this.categoriesRepository.exist({ where: { id } });
+  // Used by ProductsService before create/update — referential check that
+  // replaced the FK constraint: a friendly 404 at the point of submission.
+  async assertExists(id: string): Promise<void> {
+    const exists = isObjectIdString(id)
+      ? await this.categoryModel.exists({ _id: id })
+      : null;
     if (!exists) {
       throw new NotFoundException(`Không tìm thấy danh mục ${id}`);
     }
   }
 
-  // Archived (soft-deleted) products still hold a real FK — must count via
-  // raw query against `products` (bypassing the Product repository's default
-  // scope) so an admin can't delete a category an archived product still
-  // references.
-  private async countProducts(categoryId: number): Promise<number> {
-    const result = await this.categoriesRepository.manager
-      .createQueryBuilder()
-      .select('COUNT(*)', 'count')
-      .from('products', 'product')
-      .where('product.category_id = :categoryId', { categoryId })
-      .getRawOne<{ count: string }>();
-    return Number(result?.count ?? 0);
+  private async findOrFail(id: string) {
+    const category = isObjectIdString(id)
+      ? await this.categoryModel.findById(id)
+      : null;
+    if (!category) {
+      throw new NotFoundException(`Không tìm thấy danh mục ${id}`);
+    }
+    return category;
+  }
+
+  private toResponse(
+    category: {
+      id: string;
+      name: string;
+      slug: string;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    productCount: number,
+  ): AdminCategoryResponse {
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+      productCount,
+    };
+  }
+
+  // Archived (soft-deleted) products still hold a real reference — count the
+  // raw collection (no deletedAt filter) so an admin can't delete a category
+  // an archived product still references.
+  private countProducts(categoryId: string): Promise<number> {
+    return this.productModel.countDocuments({ categoryId });
   }
 
   private rethrowIfDuplicate(error: unknown): void {
-    if (!(error instanceof QueryFailedError)) return;
-    const driverError = error.driverError as { code?: string };
-    const msg = error.message;
-    if (
-      msg.includes('duplicate') ||
-      msg.includes('unique') ||
-      driverError.code === '23505' ||
-      driverError.code === 'ER_DUP_ENTRY'
-    ) {
+    if (isDuplicateKeyError(error)) {
       throw new ConflictException('Danh mục đã tồn tại');
     }
   }

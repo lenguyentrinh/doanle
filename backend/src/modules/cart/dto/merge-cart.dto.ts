@@ -2,6 +2,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsInt,
+  IsMongoId,
   IsPositive,
   Max,
   ValidateNested,
@@ -9,10 +10,8 @@ import {
 import { Type } from 'class-transformer';
 
 export class MergeCartItem {
-  @Type(() => Number)
-  @IsInt({ message: 'productId phải là số nguyên' })
-  @IsPositive({ message: 'productId phải là số nguyên dương' })
-  productId!: number;
+  @IsMongoId({ message: 'productId không hợp lệ' })
+  productId!: string;
 
   @Type(() => Number)
   @IsInt({ message: 'quantity phải là số nguyên' })

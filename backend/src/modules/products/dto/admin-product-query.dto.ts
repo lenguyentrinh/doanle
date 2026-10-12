@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  IsMongoId,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { trimToUndefinedTransform } from '../../../common/utils/string.utils';
 
@@ -11,9 +18,8 @@ export class AdminProductQueryDto {
   search?: string;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'categoryId phải là số nguyên' })
-  categoryId?: number;
+  @IsMongoId({ message: 'categoryId không hợp lệ' })
+  categoryId?: string;
 
   @IsOptional()
   @Type(() => Number)

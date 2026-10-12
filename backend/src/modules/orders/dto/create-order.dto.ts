@@ -2,6 +2,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsInt,
+  IsMongoId,
   IsNotEmpty,
   IsPositive,
   IsString,
@@ -10,10 +11,8 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateOrderItemDto {
-  @Type(() => Number)
-  @IsInt({ message: 'productId phải là số nguyên' })
-  @IsPositive({ message: 'productId phải là số nguyên dương' })
-  productId!: number;
+  @IsMongoId({ message: 'productId không hợp lệ' })
+  productId!: string;
 
   @Type(() => Number)
   @IsInt({ message: 'quantity phải là số nguyên' })
@@ -28,10 +27,8 @@ export class CreateOrderDto {
   @Type(() => CreateOrderItemDto)
   cartItems!: CreateOrderItemDto[];
 
-  @Type(() => Number)
-  @IsInt({ message: 'shippingAddressId phải là số nguyên' })
-  @IsPositive({ message: 'shippingAddressId phải là số nguyên dương' })
-  shippingAddressId!: number;
+  @IsMongoId({ message: 'shippingAddressId không hợp lệ' })
+  shippingAddressId!: string;
 
   @IsString({ message: 'idempotencyKey phải là chuỗi ký tự' })
   @IsNotEmpty({ message: 'idempotencyKey không được để trống' })

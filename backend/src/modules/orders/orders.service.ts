@@ -4,10 +4,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, QueryFailedError, Repository } from 'typeorm';
-import { Order, OrderStatus } from './entities/order.entity';
-import { OrderItem } from './entities/order-item.entity';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import type { Connection, QueryFilter, Model } from 'mongoose';
+import { Types } from 'mongoose';
+import { Order, OrderDocument, OrderStatus } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { UserService } from '../users/user.service';
@@ -16,15 +16,21 @@ import { InventoryService } from '../inventory/inventory.service';
 import type { OrderCreatedItem } from './order-events.types';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { OrderResponseDto } from './dto/order-response.dto';
 import {
-  OrderResponseDto,
-  AdminOrderDetailResponseDto,
-} from './dto/order-response.dto';
+  loadProductImageMap,
+  mapItemsWithImages,
+  toOrderResponseDto,
+} from './orders.mapper';
 import { StorageService } from '../../common/storage/storage.service';
-import { resolveFirstImageUrl } from '../../common/utils/image.utils';
 import { createPaginatedResponse } from '../../common/utils/pagination.utils';
-import { escapeLike } from '../../common/utils/string.utils';
+import { escapeRegex } from '../../common/utils/string.utils';
 import { computeFinalPrice } from '../../common/utils/pricing.utils';
+import {
+  isDuplicateKeyError,
+  runInTransaction,
+} from '../../common/database/transaction';
+import { isObjectIdString } from '../../common/pipes/parse-object-id.pipe';
 
 // Must match frontend/features/cart/constants.ts so the checkout total the
 // customer confirms equals the total the backend computes and persists.
@@ -38,55 +44,23 @@ function roundVnd(value: number): number {
 }
 
 export interface CreateOrderResult {
-  orderId: number;
+  // ObjectId hex string.
+  orderId: string;
 }
-
-// An order item with its thumbnail resolved (Story 4.4 order-detail page).
-// `product` may be missing (unresolvable / soft-deleted) — productImageUrl
-// falls back to null rather than throwing, the frontend renders a placeholder.
-export type OrderItemWithImage = OrderItem & { productImageUrl: string | null };
-export type OrderWithItemImages = Omit<Order, 'items'> & {
-  items: OrderItemWithImage[];
-};
-
-// Admin order-list row (Story 5.4). Deliberately duplicated rather than
-// imported from AdminDashboardService — that module already injects
-// Order/Product repositories directly instead of depending on this service,
-// the same "no cross-feature-module service coupling" precedent this
-// mirrors in the other direction.
-export interface AdminOrderSummary {
-  id: number;
-  customerName: string;
-  status: OrderStatus;
-  total: number;
-  createdAt: Date;
-}
-
-export interface PaginatedAdminOrders {
-  data: AdminOrderSummary[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-// Admin order detail (Story 5.4): everything the shopper detail view has,
-// plus fields only an admin needs. `customerEmail`/`customerPhone` come from
-// `User` (never in `shippingAddress`'s JSON snapshot or on `Order` itself);
-// `paymentStatus` is derived from `paymentReference` — no dedicated column.
-export type AdminOrderDetail = OrderWithItemImages & {
-  customerEmail: string | null;
-  customerPhone: string | null;
-  paymentStatus: 'paid' | 'unpaid';
-};
 
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    private readonly dataSource: DataSource,
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<Order>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
+    @InjectModel(CartItem.name)
+    private readonly cartItemModel: Model<CartItem>,
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly userService: UserService,
     private readonly mailService: MailService,
     private readonly inventoryService: InventoryService,
@@ -101,11 +75,12 @@ export class OrdersService {
   // and clears the ordered items from the cart. Idempotent by
   // (userId, idempotencyKey): a repeat POST returns the existing order.
   async createOrder(
-    userId: number,
+    userId: string,
     dto: CreateOrderDto,
   ): Promise<CreateOrderResult> {
-    const existing = await this.orderRepository.findOne({
-      where: { userId, idempotencyKey: dto.idempotencyKey },
+    const existing = await this.orderModel.findOne({
+      userId,
+      idempotencyKey: dto.idempotencyKey,
     });
     if (existing) {
       return { orderId: existing.id };
@@ -117,20 +92,20 @@ export class OrdersService {
       dto.shippingAddressId,
     );
 
-    let order: Order;
+    let order: OrderDocument;
     let stockLevels: OrderCreatedItem[];
     try {
       ({ order, stockLevels } = await this.placeOrder(userId, dto, address));
     } catch (err) {
       // Two concurrent requests with the same idempotency key can both pass
       // the pre-check above and both enter the transaction; the loser hits
-      // `uq_orders_user_idempotency_key` (DB-level, see CreateOrders
-      // migration) instead of a stock/validation error. That's a benign
-      // replay, not a real failure — return the winner's order instead of
-      // bubbling a 500.
+      // the unique index `uq_orders_user_idempotency_key` instead of a
+      // stock/validation error. That's a benign replay, not a real failure
+      // — return the winner's order instead of bubbling a 500.
       if (this.isDuplicateIdempotencyKeyError(err)) {
-        const winner = await this.orderRepository.findOne({
-          where: { userId, idempotencyKey: dto.idempotencyKey },
+        const winner = await this.orderModel.findOne({
+          userId,
+          idempotencyKey: dto.idempotencyKey,
         });
         if (winner) {
           return { orderId: winner.id };
@@ -151,56 +126,75 @@ export class OrdersService {
   }
 
   private isDuplicateIdempotencyKeyError(err: unknown): boolean {
-    if (!(err instanceof QueryFailedError)) return false;
-    const code = (err as QueryFailedError & { driverError?: { code?: string } })
-      .driverError?.code;
-    return code === 'ER_DUP_ENTRY' && err.message.includes('idempotency_key');
+    if (!isDuplicateKeyError(err)) return false;
+    const message = (err as Error).message ?? '';
+    return (
+      message.includes('uq_orders_user_idempotency_key') ||
+      message.includes('idempotencyKey')
+    );
   }
 
   private async placeOrder(
-    userId: number,
+    userId: string,
     dto: CreateOrderDto,
-    address: Awaited<ReturnType<UserService['getOwnedAddress']>>,
-  ): Promise<{ order: Order; stockLevels: OrderCreatedItem[] }> {
-    return this.dataSource.transaction(async (manager) => {
-      // Merge duplicate productId lines before validating — otherwise each
-      // line is checked against the same un-decremented stockQuantity, so
-      // e.g. two lines of quantity 5 against a stock of 6 both "pass" and
-      // the stock update below decrements the same row twice (oversell).
-      const quantityByProductId = new Map<number, number>();
-      for (const line of dto.cartItems) {
-        quantityByProductId.set(
-          line.productId,
-          (quantityByProductId.get(line.productId) ?? 0) + line.quantity,
-        );
-      }
-      const productIds = Array.from(quantityByProductId.keys());
-      // Lock the product rows for the duration of the transaction
-      // (SELECT ... FOR UPDATE). Without this, two concurrent checkouts could
-      // both pass the `quantity <= stockQuantity` check below and decrement
-      // past zero (oversell). InnoDB acquires the row locks in primary-key
-      // order, so concurrent orders lock in a consistent order and don't
-      // deadlock on overlapping products. Matches CartService's locking.
-      const products = await manager.find(Product, {
-        where: { id: In(productIds) },
-        lock: { mode: 'pessimistic_write' },
-      });
-      const byId = new Map(products.map((p) => [p.id, p]));
+    address: {
+      firstName: string;
+      lastName: string;
+      street: string;
+      city: string;
+    },
+  ): Promise<{ order: OrderDocument; stockLevels: OrderCreatedItem[] }> {
+    // Merge duplicate productId lines before validating — otherwise each
+    // line would be checked/decremented separately against the same stock
+    // (e.g. two lines of quantity 5 against a stock of 6).
+    const quantityByProductId = new Map<string, number>();
+    for (const line of dto.cartItems) {
+      const key = String(line.productId).toLowerCase();
+      quantityByProductId.set(
+        key,
+        (quantityByProductId.get(key) ?? 0) + line.quantity,
+      );
+    }
+    const productIds = Array.from(quantityByProductId.keys());
 
-      const orderItems: OrderItem[] = [];
-      // Products to decrement once the order row is saved. Collected during
-      // validation so the reserve step below needs no second lookup.
-      const stockUpdates: { product: Product; quantity: number }[] = [];
+    return runInTransaction(this.connection, async (session) => {
+      const orderItems: {
+        productId: Types.ObjectId;
+        productName: string;
+        price: number;
+        quantity: number;
+      }[] = [];
+      const stockLevels: OrderCreatedItem[] = [];
       let subtotal = 0;
 
       for (const [productId, quantity] of quantityByProductId) {
-        const product = byId.get(productId);
-        if (!product || !product.isActive) {
-          throw new BadRequestException(
-            `Sản phẩm ${productId} hiện không khả dụng`,
-          );
-        }
-        if (quantity > product.stockQuantity) {
+        // Atomic conditional decrement: the filter only matches an active,
+        // non-archived product with enough stock, so two concurrent checkouts
+        // can never both succeed past zero (no oversell) — a MongoDB
+        // equivalent of the old SELECT ... FOR UPDATE + check + decrement.
+        // Inside the transaction, a failure on a later line rolls back the
+        // decrements of earlier lines.
+        const product = await this.productModel.findOneAndUpdate(
+          {
+            _id: productId,
+            isActive: true,
+            deletedAt: null,
+            stockQuantity: { $gte: quantity },
+          },
+          { $inc: { stockQuantity: -quantity } },
+          { returnDocument: 'after', session },
+        );
+
+        if (!product) {
+          // Work out why, to keep the original per-reason messages.
+          const current = await this.productModel
+            .findOne({ _id: productId, deletedAt: null })
+            .session(session);
+          if (!current || !current.isActive) {
+            throw new BadRequestException(
+              `Sản phẩm ${productId} hiện không khả dụng`,
+            );
+          }
           throw new BadRequestException(
             `Không đủ hàng tồn kho cho sản phẩm ${productId}`,
           );
@@ -211,71 +205,56 @@ export class OrdersService {
         // product's discount later changes or is removed.
         const price = computeFinalPrice(
           Number(product.price),
-          product.discountPercentage,
+          product.discountPercentage ?? null,
         );
         subtotal += price * quantity;
 
-        orderItems.push(
-          manager.create(OrderItem, {
-            productId: product.id,
-            productName: product.name,
-            price,
-            quantity,
-          }),
-        );
-        stockUpdates.push({ product, quantity });
+        orderItems.push({
+          productId: product._id,
+          productName: product.name,
+          price,
+          quantity,
+        });
+        // Post-decrement stock snapshot for low-stock alerting.
+        stockLevels.push({
+          productId: product.id,
+          productName: product.name,
+          quantityOrdered: quantity,
+          remainingStock: product.stockQuantity,
+        });
       }
 
       subtotal = roundVnd(subtotal);
       const tax = roundVnd(subtotal * TAX_RATE);
       const total = roundVnd(subtotal + SHIPPING_FEE + tax);
 
-      const created = manager.create(Order, {
-        userId,
-        status: OrderStatus.PENDING,
-        subtotal,
-        shippingFee: SHIPPING_FEE,
-        tax,
-        total,
-        shippingAddress: {
-          firstName: address.firstName,
-          lastName: address.lastName,
-          street: address.street,
-          city: address.city,
-        },
-        idempotencyKey: dto.idempotencyKey,
-        paymentReference: null,
-        items: orderItems,
-      });
-
-      const saved = await manager.save(created);
-
-      // Reserve stock at placement — every line was validated
-      // `quantity <= stockQuantity` above, so the decrement never goes negative.
-      // Mutate in-memory first, then batch-save all at once.
-      for (const { product, quantity } of stockUpdates) {
-        product.stockQuantity -= quantity;
-      }
-      await manager.save(stockUpdates.map(({ product }) => product));
+      const [saved] = await this.orderModel.create(
+        [
+          {
+            userId: new Types.ObjectId(userId),
+            status: OrderStatus.PENDING,
+            subtotal,
+            shippingFee: SHIPPING_FEE,
+            tax,
+            total,
+            shippingAddress: {
+              firstName: address.firstName,
+              lastName: address.lastName,
+              street: address.street,
+              city: address.city,
+            },
+            idempotencyKey: dto.idempotencyKey,
+            paymentReference: null,
+            items: orderItems,
+          },
+        ],
+        { session },
+      );
 
       // Remove the ordered items from this user's cart.
-      if (productIds.length > 0) {
-        await manager.delete(CartItem, {
-          userId,
-          productId: In(productIds),
-        });
-      }
-
-      // Post-decrement stock snapshot for low-stock alerting — read from
-      // the already-mutated in-memory `product` objects above, no extra
-      // query needed.
-      const stockLevels: OrderCreatedItem[] = stockUpdates.map(
-        ({ product, quantity }) => ({
-          productId: product.id,
-          productName: product.name,
-          quantityOrdered: quantity,
-          remainingStock: product.stockQuantity,
-        }),
+      await this.cartItemModel.deleteMany(
+        { userId, productId: { $in: productIds } },
+        { session },
       );
 
       return { order: saved, stockLevels };
@@ -284,10 +263,10 @@ export class OrdersService {
 
   // Paginated order history for the caller (newest first), optionally
   // narrowed by status. Never returns another user's orders. Items carry a
-  // resolved `productImageUrl` (product relation joined) so the history list
-  // can render a product thumbnail per order, matching the detail view.
+  // resolved `productImageUrl` so the history list can render a product
+  // thumbnail per order, matching the detail view.
   async findAllForUser(
-    userId: number,
+    userId: string,
     query: OrderQueryDto,
   ): Promise<{
     data: OrderResponseDto[];
@@ -297,56 +276,45 @@ export class OrdersService {
   }> {
     const { status, search, sort, page, limit } = query;
 
-    const qb = this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.userId = :userId', { userId })
-      .leftJoinAndSelect('order.items', 'items');
+    const filter: QueryFilter<Order> = { userId };
 
     if (status) {
-      qb.andWhere('order.status = :status', { status });
+      filter.status = status;
     }
 
     if (search) {
       const trimmed = search.trim().replace(/^#/, '');
-      const escaped = escapeLike(trimmed);
 
-      if (/^\d+$/.test(trimmed)) {
-        qb.andWhere('order.id = :orderId', { orderId: Number(trimmed) });
+      if (isObjectIdString(trimmed)) {
+        // Order-number search: exact order id.
+        filter._id = trimmed;
       } else {
-        qb.andWhere(
-          (subQuery) => {
-            return (
-              'EXISTS (' +
-              subQuery
-                .subQuery()
-                .select('1')
-                .from('order_items', 'sub_item')
-                .where('sub_item.order_id = order.id')
-                .andWhere('sub_item.product_name LIKE :prodSearch')
-                .getQuery() +
-              ')'
-            );
-          },
-          { prodSearch: `%${escaped}%` },
-        );
+        // Product-name search across the order's items (EXISTS semantics).
+        filter['items.productName'] = new RegExp(escapeRegex(trimmed), 'i');
       }
     }
 
-    qb.orderBy('order.createdAt', sort === 'oldest' ? 'ASC' : 'DESC');
+    const direction = sort === 'oldest' ? 1 : -1;
+    const [orders, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ createdAt: direction, _id: direction })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      this.orderModel.countDocuments(filter),
+    ]);
 
-    qb.skip((page - 1) * limit).take(limit);
+    const productImageMap = await loadProductImageMap(
+      this.productModel,
+      orders,
+    );
 
-    const [orders, total] = await qb.getManyAndCount();
-
-    const productImageMap = await this.loadProductImageMap(orders);
-
-    const data = orders.map((order) => {
-      const withImages = {
-        ...order,
-        items: this.mapItemsWithImages(order.items ?? [], productImageMap),
-      };
-      return this.toOrderResponseDto(withImages);
-    });
+    const data = orders.map((order) =>
+      toOrderResponseDto(
+        order,
+        mapItemsWithImages(order, productImageMap, this.storageService),
+      ),
+    );
 
     return createPaginatedResponse(data, total, page, limit);
   }
@@ -354,35 +322,37 @@ export class OrdersService {
   // Fetch an order owned by the caller with its items (generic 404
   // otherwise) — used by GET /api/orders/:id (order-confirmation page, and
   // the order-detail page in Story 4.4). Each item's `productImageUrl` is
-  // resolved from the joined product's first image key (null if the product
-  // can't be resolved, e.g. soft-deleted, or has no images).
+  // resolved from the product's first image key (null if the product can't
+  // be resolved or has no images).
   async getOrderForUser(
-    userId: number,
-    orderId: number,
+    userId: string,
+    orderId: string,
   ): Promise<OrderResponseDto> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: { items: true },
-    });
-    if (!order || order.userId !== userId) {
+    const order = isObjectIdString(orderId)
+      ? await this.orderModel.findById(orderId)
+      : null;
+    if (!order || order.userId.toString() !== String(userId)) {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
-    const productImageMap = await this.loadProductImageMap([order]);
-    const withImages = {
-      ...order,
-      items: this.mapItemsWithImages(order.items, productImageMap),
-    };
-    return this.toOrderResponseDto(withImages);
+    const productImageMap = await loadProductImageMap(this.productModel, [
+      order,
+    ]);
+    return toOrderResponseDto(
+      order,
+      mapItemsWithImages(order, productImageMap, this.storageService),
+    );
   }
 
   // Order-confirmation email sent at placement. Recipient resolved first
   // (awaited, fast local read); only the SMTP send is fire-and-forget. The
   // order is already committed, so a lookup/send failure here must never fail
   // an order that was successfully placed.
-  private async dispatchOrderConfirmationEmail(order: Order): Promise<void> {
+  private async dispatchOrderConfirmationEmail(
+    order: OrderDocument,
+  ): Promise<void> {
     try {
-      const user = await this.userService.findById(order.userId);
+      const user = await this.userService.findById(order.userId.toString());
       if (user) {
         this.mailService
           .sendOrderConfirmation(order, user.email)
@@ -409,7 +379,7 @@ export class OrdersService {
   // dispatchOrderConfirmationEmail above. A failure here must never fail an
   // order that was already committed.
   private async recordLowStockAlerts(
-    order: Order,
+    order: OrderDocument,
     stockLevels: OrderCreatedItem[],
   ): Promise<void> {
     try {
@@ -423,73 +393,5 @@ export class OrdersService {
         err instanceof Error ? err.stack : String(err),
       );
     }
-  }
-
-  private async loadProductImageMap(
-    orders: Order[],
-  ): Promise<Map<number, string[]>> {
-    const productIds = [
-      ...new Set(orders.flatMap((o) => o.items?.map((i) => i.productId) ?? [])),
-    ];
-    if (productIds.length === 0) return new Map();
-    const products = await this.dataSource.manager.find(Product, {
-      where: { id: In(productIds) },
-      select: ['id', 'imageKeys'],
-      withDeleted: true,
-    });
-    return new Map(products.map((p) => [p.id, p.imageKeys]));
-  }
-
-  protected mapItemsWithImages(
-    items: OrderItem[],
-    productImageMap: Map<number, string[]>,
-  ): OrderItemWithImage[] {
-    return items.map((item) => ({
-      ...item,
-      productImageUrl: resolveFirstImageUrl(
-        productImageMap.get(item.productId),
-        this.storageService,
-      ),
-    }));
-  }
-
-  protected toOrderResponseDto(order: OrderWithItemImages): OrderResponseDto {
-    return {
-      id: order.id,
-      status: order.status,
-      subtotal: order.subtotal,
-      shippingFee: order.shippingFee,
-      tax: order.tax,
-      total: order.total,
-      shippingAddress: order.shippingAddress,
-      items: order.items.map((item) => ({
-        id: item.id,
-        productId: item.productId,
-        productName: item.productName,
-        price: item.price,
-        quantity: item.quantity,
-        productImageUrl: item.productImageUrl,
-      })),
-      confirmedAt: order.confirmedAt,
-      shippedAt: order.shippedAt,
-      deliveredAt: order.deliveredAt,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-    };
-  }
-
-  protected toAdminOrderDetailResponseDto(
-    order: OrderWithItemImages,
-    customerEmail: string | null,
-    customerPhone: string | null,
-    paymentReference: string | null,
-  ): AdminOrderDetailResponseDto {
-    const base = this.toOrderResponseDto(order);
-    return {
-      ...base,
-      customerEmail,
-      customerPhone,
-      paymentStatus: paymentReference ? 'paid' : 'unpaid',
-    };
   }
 }

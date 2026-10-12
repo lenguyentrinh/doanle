@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -19,6 +18,7 @@ import { CategoriesService } from './categories.service';
 import { AdminCategoryQueryDto } from './dto/admin-category-query.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 // AuthGuard('jwt') must run before RolesGuard so req.user is populated
 // before the role check — same precedent as ProductsAdminController.
@@ -42,7 +42,7 @@ export class CategoriesAdminController {
 
   @Patch(':id')
   async rename(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Body() dto: UpdateCategoryDto,
   ) {
     const data = await this.categoriesService.rename(id, dto);
@@ -50,7 +50,7 @@ export class CategoriesAdminController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id', ParseObjectIdPipe) id: string) {
     return this.categoriesService.remove(id);
   }
 }
