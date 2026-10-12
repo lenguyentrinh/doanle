@@ -86,7 +86,7 @@ export default function Footer() {
 
         {/* Brand + link columns */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-[clamp(32px,4vw,56px)] sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-          <div className="col-span-2 flex max-w-[280px] flex-col gap-3 sm:col-span-1">
+          <div className="col-span-2 flex flex-col gap-3 sm:col-span-1 sm:max-w-[280px]">
             <span className="text-label-xs text-white/40">Liên hệ</span>
             <p className="text-body-sm leading-relaxed text-white/75">
               48 Lý Tự Trọng, Quận 1
