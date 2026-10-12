@@ -1,0 +1,119 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.iml
+*.sublime-workspace
+*.sublime-project
+.atom/
+.emacs.d/
+.vim/
+.nvim/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Temporary and cache files
+.cache/
+.next/
+.nuxt/
+dist/
+.cache-loader/
+.eslintcache
+.stylelintcache
+*.tgz
+
+# Testing
+cypress/videos/
+cypress/screenshots/
+.mocha-timeout
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Project-specific
+.agents/
+.claude/
+.opencode/
+_bmad/
+
+# Admin-uploaded product images (Story 5.2's local-disk StorageService) —
+# runtime-generated, never committed.
+backend/uploads/
+
+# Design handoff assets (not part of the app source)
+design_handoff_oren_boho/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variables file
+.env.test
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+*.lnk
+
+# Directories
+node_modules
+.next
+.nuxt
+dist
+build
+
+# Local DB dumps used to seed docker-compose mysql (contains real data)
+backend/dump.sql

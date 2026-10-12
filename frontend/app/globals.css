@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
+
+/* ---------------------------------------------------------------------------
+   OREN — BOHO CHIC (2026 refresh)
+
+   Same token NAMES as before, new values. That is deliberate: every component
+   that already uses `bg-ink`, `text-paper`, `border-line`, `shadow-card`… picks
+   up the new palette with zero edits. Only the components listed in the handoff
+   README need structural changes.
+
+   Ground is pure white. Ink is a warm dark brown, never black. The accent is a
+   single terracotta used for CTAs, selected states and links. Shadows are
+   tinted with the same warm brown so nothing reads cold.
+
+   Type: Newsreader (display / product names / prices) + Be Vietnam Pro
+   (all UI, labels, body).
+
+   ⚠ Two Vietnamese gotchas, both learned the hard way:
+   1. Jost — the original body font — has NO vietnamese subset. Accented
+      characters fell back to a system font, so a single sentence rendered in two
+      faces ("Tiếp tục với tủ đồ…" was visibly mixed). Be Vietnam Pro is drawn
+      for Vietnamese and now carries ALL body copy. Do not reintroduce Jost, and
+      do not rely on a fallback chain to paper over a missing subset — the mixing
+      shows mid-word.
+   2. Never set a display line-height below ~1.06. Stacked tone marks (ế, ộ, ữ)
+      collide with the line above; that reads as a "broken font" but is really a
+      leading problem. Newsreader itself has full Vietnamese coverage.
+   Shape: pills for controls (rounded-full), 10px for cards, 14–18px for panels
+   and modals, arch tops (rounded-t-[50%]) for hero + category photography.
+--------------------------------------------------------------------------- */
+@theme inline {
+  --font-sans: var(--font-bvp);
+  --font-display: var(--font-newsreader);
+
+  /* Ground & ink */
+  --color-paper: #ffffff;
+  --color-surface: #ffffff;
+  --color-ink: #3f3128;
+  --color-ink-secondary: #7d6553;
+  --color-ink-muted: #a5907a;
+  --color-ink-soft: #2f251e;
+
+  /* Accent — the one saturated colour in the system */
+  --color-accent: #c05f3c;
+  --color-accent-strong: #a9502f;
+  --color-accent-soft: #e8a888;
+
+  /* Warm neutrals */
+  --color-line: #f0e8dc;
+  --color-line-strong: #e0d0ba;
+  --color-fill: #faf5ee;
+  --color-fill-dark: #f2e6d5;
+  --color-sand: #eddcc2;
+  --color-olive: #7d7340;
+  --color-olive-soft: #c6bb7d;
+  --color-clay: #7d5a41;
+  /* Auth shell only: ground is a touch lighter than --color-fill, and
+     fine-print (terms, "optional" labels) is lighter than --color-ink-muted. */
+  --color-auth-ground: #fbf7f1;
+  --color-ink-faint: #c3ae97;
+  /* Auth hang tag's string hole. */
+  --color-tag-hole: #7a6250;
+
+  /* State */
+  --color-error: #b8503a;
+  --color-error-strong: #a1442c;
+  --color-success: #6f6733;
+  --color-alert: #a4762f;
+  --color-success-bg: #eef0e2;
+  --color-alert-bg: #faf0e2;
+  --color-error-bg: #fbeee9;
+  /* Admin dashboard's alert-tone metric card: border + sparkline shades that
+     don't fit the shared --color-alert(-bg) pair used for chips/badges. */
+  --color-alert-line: #f0dfc4;
+  --color-alert-soft: #e2c79a;
+  /* Same problem, success side: AdminStatStrip's success-tone card wants a
+     border a shade greener than --color-line-strong but the shared
+     --color-success(-bg) pair has no line variant of its own. */
+  --color-success-line: #dfe3cd;
+
+  --color-border: rgba(63, 49, 40, 0.08);
+  --color-border-strong: rgba(63, 49, 40, 0.16);
+
+  /* Shape */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Spacing rhythm */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 48px;
+  --spacing-xl: 96px;
+
+  /* Elevation — warm-tinted, wide and soft */
+  --shadow-xs: 0 1px 2px rgba(150, 110, 78, 0.05);
+  --shadow-card: 0 14px 34px -22px rgba(150, 110, 78, 0.5);
+  --shadow-card-hover: 0 30px 60px -26px rgba(150, 110, 78, 0.55);
+  --shadow-overlay: 0 50px 100px -40px rgba(63, 49, 40, 0.6);
+  --shadow-btn: 0 10px 30px -12px rgba(63, 49, 40, 0.5);
+  --shadow-btn-hover: 0 18px 40px -14px rgba(192, 95, 60, 0.6);
+  --shadow-float: 0 12px 28px -12px rgba(63, 49, 40, 0.5);
+  --shadow-hero: 0 40px 80px -40px rgba(150, 110, 78, 0.45);
+  --shadow-drawer: -30px 0 80px -30px rgba(63, 49, 40, 0.4);
+  /* Carried over from the monochrome system, recoloured warm/terracotta —
+     the handoff's globals.css dropped these since its own prototype markup
+     doesn't use them, but Header/ProductForm/admin pages still do. */
+  --shadow-focus: 0 0 0 4px rgba(192, 95, 60, 0.12);
+  --shadow-well: inset 0 1px 2px rgba(63, 49, 40, 0.05);
+  --shadow-header: 0 1px 0 rgba(63, 49, 40, 0.04), 0 10px 28px -14px rgba(150, 110, 78, 0.18);
+
+  /* Motion */
+  --animate-hero-reveal: hero-reveal 11s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-up: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-rise: rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-overlay-in: overlay-in 0.25s ease-out both;
+  --animate-sheet-in: sheet-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-bar-in: bar-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-marquee: marquee 34s linear infinite;
+  /* Carried over from the monochrome system — the handoff's globals.css
+     dropped these since its own prototype screens don't use them, but
+     SortSelect/Header/account components still do. */
+  --animate-dropdown-in: dropdown-in 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-account-rise: account-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Ambient floating light behind the 404/error pages and admin hero. */
+  --animate-drift: drift 44s ease-in-out infinite;
+  /* Auth "hang tag" modal (ForgotPasswordTag): drops from above with a
+     pendulum settle, flies back up on close; backdrop fades in/out. */
+  --animate-tag-drop: tag-drop 1.15s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+  --animate-tag-up: tag-up 0.45s cubic-bezier(0.5, 0, 0.75, 0) both;
+  --animate-fade-in: fade-in 0.35s ease both;
+  /* Quick View popup: hang-tag swing, magazine page flip. No fill mode on the
+     swing so the resting rotate/hover transform keeps working afterwards. */
+  --animate-qv-swing: qv-swing 1.2s cubic-bezier(0.22, 0.9, 0.3, 1);
+  --animate-qv-swing-m: qv-swing-m 1.2s cubic-bezier(0.22, 0.9, 0.3, 1);
+  --animate-qv-flip: qv-flip 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-out: fade-out 0.45s ease both;
+  /* Admin dashboard hero: bar chart grow-in and the "Cập nhật" live dot pulse. */
+  --animate-admin-grow: admin-grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-admin-pulse: admin-pulse 2.4s ease-in-out infinite;
+  /* AdminConfirmDialog's card — the handoff specs a bespoke translateY+scale
+     entrance for this one modal, distinct from --animate-rise. */
+  --animate-admin-modal-in: admin-modal-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* 404 swatch rail: cards drop in staggered, then float in place. */
+  --animate-swatch-in: swatch-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-sway: sway 8s ease-in-out infinite;
+  /* Error boundary's broken stitch line — the seam "runs in" left to right. */
+  --animate-stitch-in: stitch-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* 404/error status chip dot — kept distinct from --animate-admin-pulse
+     (dashboard's live-update dot) even though the timing is the same, so the
+     two contexts don't share a token that either could later drift out from under. */
+  --animate-nf-pulse: nf-pulse 2.4s ease-in-out infinite;
+}
+
+/* Smooth scrolling and section snap both rely on scroll motion — skip both
+   when the user has asked for reduced motion, not just the snap half. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+  }
+}
+
+html,
+body {
+  font-family: var(--font-bvp), 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(192, 95, 60, 0.42) transparent;
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(192, 95, 60, 0.42);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+@keyframes hero-reveal { from { transform: scale(1.09); } to { transform: scale(1); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes bar-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes drift { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(5%, -7%, 0) scale(1.08); } }
+@keyframes tag-drop {
+  0%   { transform: translateY(-120vh) rotate(9deg); }
+  55%  { transform: translateY(0) rotate(-5deg); }
+  72%  { transform: translateY(0) rotate(3deg); }
+  86%  { transform: translateY(0) rotate(-1.5deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+@keyframes qv-swing { 0% { transform: rotate(-9deg); } 40% { transform: rotate(-1deg); } 70% { transform: rotate(-5deg); } 100% { transform: rotate(-3.5deg); } }
+@keyframes qv-swing-m { 0% { transform: rotate(-8deg); } 40% { transform: rotate(1deg); } 70% { transform: rotate(-3deg); } 100% { transform: rotate(-1.5deg); } }
+@keyframes qv-flip { from { opacity: 0; transform: perspective(1400px) rotateY(-14deg); transform-origin: left center; } to { opacity: 1; transform: none; } }
+@keyframes tag-up { to { transform: translateY(-120vh) rotate(-5deg); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes account-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes admin-grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+@keyframes admin-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.72); } }
+@keyframes admin-modal-in { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes swatch-in { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes sway { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes stitch-in { from { opacity: 0; transform: scaleY(.2); } to { opacity: 1; transform: none; } }
+@keyframes nf-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.7); } }
+
+/* Type scale — Newsreader for display, Jost for everything functional.
+   Kept in @layer components so per-instance utilities still win. */
+@layer components {
+  .text-display-xl {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: clamp(38px, 5.4vw, 78px);
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    line-height: 0.92;
+  }
+  .text-display-lg {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: clamp(28px, 3.6vw, 52px);
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    line-height: 1;
+  }
+  .text-display-md {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: clamp(26px, 3.4vw, 48px);
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    line-height: 1.04;
+  }
+  .text-headline-md {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.18;
+  }
+  .text-headline-sm {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    line-height: 1.28;
+  }
+  /* Small italic section numeral ("01", "02"…) that sits beside a headline —
+     distinct from .text-headline-sm, which is a full heading size. */
+  .text-eyebrow-num {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-accent);
+  }
+
+  /* Product names and prices are display voice too — this is what makes the
+     grid read as editorial rather than as a generic shop. */
+  .text-product {
+    font-family: var(--font-newsreader), Georgia, serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.006em;
+    line-height: 1.3;
+  }
+
+  .text-body-lg { font-size: 16.5px; font-weight: 400; line-height: 1.75; }
+  .text-body-md { font-size: 15px; font-weight: 400; line-height: 1.65; }
+  .text-body-sm { font-size: 13.5px; font-weight: 400; line-height: 1.6; }
+  .text-caption { font-size: 12.5px; font-weight: 400; line-height: 1.5; }
+
+  .text-label-sm {
+    font-size: 11px;
+    font-weight: 550;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    line-height: 1.4;
+  }
+  .text-label-xs {
+    font-size: 10px;
+    font-weight: 550;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    line-height: 1.4;
+  }
+}
+
+/* Paper grain — one fixed overlay in the root layout, above everything,
+   pointer-events:none so it never eats clicks. */
+.oren-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.038;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Arch-topped photography — hero, category tiles, account aside. */
+.oren-arch { border-radius: min(50%, 320px) min(50%, 320px) 12px 12px; }
+.oren-arch-sm { border-radius: min(50%, 140px) min(50%, 140px) 10px 10px; }
+/* Flat-bottomed variant — the hero image column runs to the band's edge, so
+   only the top corners arch. */
+.oren-arch-top { border-radius: min(50%, 360px) min(50%, 360px) 0 0; }
