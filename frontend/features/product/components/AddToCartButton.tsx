@@ -1,5 +1,6 @@
 'use client';
 
+import { MdAddShoppingCart } from 'react-icons/md';
 import { useAddToCart } from '@/features/product/hooks/useAddToCart';
 
 // The "Add to Cart" affordance on the ProductCard. Wired to the cart API
@@ -34,13 +35,15 @@ export default function AddToCartButton({
       aria-label={outOfStock ? `Báo khi ${productName} có hàng trở lại` : `Thêm ${productName} vào giỏ hàng`}
       disabled={outOfStock || status === 'adding'}
       onClick={() => addToCart(productId)}
-      className={`rounded-full px-4 py-3 text-label-xs shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:shadow-none ${
+      className={`flex h-11 items-center justify-center whitespace-nowrap rounded-full px-4 text-label-xs shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:shadow-none ${
         outOfStock
           ? 'bg-white/96 text-ink'
           : 'bg-ink text-white hover:bg-accent hover:shadow-btn-hover disabled:opacity-40 disabled:hover:bg-ink'
       } ${className}`}
     >
-      {label}
+      {/* Small screens: icon only, the label would not fit the narrow card. */}
+      <MdAddShoppingCart size={20} className="md:hidden" aria-hidden />
+      <span className="hidden truncate md:inline">{label}</span>
     </button>
   );
 }

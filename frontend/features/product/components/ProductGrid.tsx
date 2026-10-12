@@ -27,7 +27,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
   // at the point the filter sidebar appears (md) and left it looking cramped.
   return (
     <QuickViewScope products={products}>
-      <div className="grid grid-cols-2 gap-[clamp(12px,1.6vw,24px)] md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(12px,1.6vw,24px)] md:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-cols-[repeat(4,minmax(0,1fr))]">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

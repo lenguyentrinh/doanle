@@ -40,7 +40,7 @@ export default function NewArrivals({
 
       {products.length > 0 ? (
         <QuickViewScope products={products.slice(0, 4)}>
-          <div className="grid grid-cols-2 gap-[clamp(12px,1.6vw,24px)] md:grid-cols-4">
+          <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(12px,1.6vw,24px)] md:grid-cols-[repeat(4,minmax(0,1fr))]">
             {products.slice(0, 4).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

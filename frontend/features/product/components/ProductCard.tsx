@@ -39,7 +39,7 @@ export default function ProductCard({ product, compact = false }: { product: Pro
   const hasDiscount = Boolean(product.discountPercentage);
 
   return (
-    <article className="group flex h-full flex-col motion-safe:animate-rise">
+    <article className="group flex h-full min-w-0 flex-col motion-safe:animate-rise">
       <div className="group/media relative">
         <Link
           href={href}
@@ -102,9 +102,9 @@ export default function ProductCard({ product, compact = false }: { product: Pro
         <span className="text-label-xs text-ink-muted">{product.category}</span>
         <Link
           href={href}
-          className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
-          <h3 className={`text-product text-ink ${compact ? 'text-[17px]' : 'text-[19px] leading-[1.28]'}`}>{product.name}</h3>
+          <h3 title={product.name} className={`truncate text-product text-ink ${compact ? 'text-[17px]' : 'text-[19px] leading-[1.28]'}`}>{product.name}</h3>
         </Link>
         <div className="mt-[3px] flex items-baseline justify-between gap-2.5 border-t border-line pt-2.5">
           <p className="flex items-baseline gap-2">

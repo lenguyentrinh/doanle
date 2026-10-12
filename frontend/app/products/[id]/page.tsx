@@ -108,7 +108,7 @@ export default async function ProductDetailPage({
             </div>
             <div className="flex gap-[clamp(12px,1.5vw,22px)] overflow-x-auto pb-2 [scroll-snap-type:x_mandatory]">
               {related.map((p) => (
-                <div key={p.id} className="flex-[0_0_clamp(170px,20vw,270px)] [scroll-snap-align:start]">
+                <div key={p.id} className="min-w-0 flex-[0_0_clamp(170px,20vw,270px)] [scroll-snap-align:start]">
                   <ProductCard product={p} compact />
                 </div>
               ))}
