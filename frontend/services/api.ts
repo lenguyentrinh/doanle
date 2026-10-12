@@ -1,8 +1,8 @@
 import axios from "axios";
-import { API_BASE_URL } from "@/lib/config";
+import { CLIENT_API_BASE_URL } from "@/lib/config";
 
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: CLIENT_API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -63,7 +63,7 @@ api.interceptors.response.use(
         // sets a new HttpOnly access_token cookie, which the retried request
         // picks up automatically via withCredentials.
         await axios.post(
-          `${API_BASE_URL}/api/auth/refresh`,
+          `${CLIENT_API_BASE_URL}/api/auth/refresh`,
           {},
           { withCredentials: true },
         );

@@ -39,6 +39,14 @@ const cloudinaryRemotePattern = {
 };
 
 const nextConfig: NextConfig = {
+  // Same-origin proxy for the API (see CLIENT_API_BASE_URL in lib/config.ts).
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (process.env.NEXT_PUBLIC_USE_API_PROXY !== "true" || !apiUrl) return [];
+    return [
+      { source: "/api/:path*", destination: `${apiUrl.replace(/\/$/, "")}/api/:path*` },
+    ];
+  },
   // Emits a self-contained .next/standalone folder (traced deps only, no
   // full node_modules) so the Docker production image can skip `pnpm install`
   // entirely and just run `node server.js`.
