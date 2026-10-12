@@ -24,6 +24,17 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
+// Frontend (Vercel) and API (Render) are different sites in production, so the
+// auth cookies must be SameSite=None (requires Secure) or the browser drops
+// them on cross-site XHR. Lax stays in development (same-site localhost).
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const COOKIE_SAME_SITE = IS_PRODUCTION ? ('none' as const) : ('lax' as const);
+const CLEAR_COOKIE_OPTS = {
+  httpOnly: true,
+  secure: IS_PRODUCTION,
+  sameSite: COOKIE_SAME_SITE,
+};
+
 // cookie-parser types `Request.cookies` as `any`; narrow it here instead of
 // letting that `any` leak into every handler that reads a cookie.
 type RequestWithCookies = Omit<Request, 'cookies'> & {
@@ -48,7 +59,7 @@ export class AuthController {
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: COOKIE_SAME_SITE,
       path: '/',
       maxAge: ACCESS_TOKEN_MAX_AGE,
     });
@@ -56,7 +67,7 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: COOKIE_SAME_SITE,
       path: '/api/auth',
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
@@ -75,8 +86,11 @@ export class AuthController {
   ) {
     const oldRefreshToken = (req as RequestWithCookies).cookies?.refresh_token;
     if (!oldRefreshToken) {
-      res.clearCookie('access_token', { path: '/' });
-      res.clearCookie('refresh_token', { path: '/api/auth' });
+      res.clearCookie('access_token', { ...CLEAR_COOKIE_OPTS, path: '/' });
+      res.clearCookie('refresh_token', {
+        ...CLEAR_COOKIE_OPTS,
+        path: '/api/auth',
+      });
       throw new UnauthorizedException('Không có refresh token được cung cấp');
     }
 
@@ -86,7 +100,7 @@ export class AuthController {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: COOKIE_SAME_SITE,
       path: '/',
       maxAge: ACCESS_TOKEN_MAX_AGE,
     });
@@ -94,7 +108,7 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: COOKIE_SAME_SITE,
       path: '/api/auth',
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
@@ -110,8 +124,11 @@ export class AuthController {
       (req as RequestWithCookies).cookies?.refresh_token,
     );
 
-    res.clearCookie('access_token', { path: '/' });
-    res.clearCookie('refresh_token', { path: '/api/auth' });
+    res.clearCookie('access_token', { ...CLEAR_COOKIE_OPTS, path: '/' });
+    res.clearCookie('refresh_token', {
+      ...CLEAR_COOKIE_OPTS,
+      path: '/api/auth',
+    });
 
     return { message: 'Đăng xuất thành công' };
   }
