@@ -23,7 +23,7 @@ function getPageDots(totalPages: number, page: number): number[] {
 }
 
 const NAV_BUTTON_CLASSES =
-  'inline-flex min-h-12 items-center justify-center rounded-full border border-line-strong bg-transparent px-6 py-2.5 text-label-sm text-ink transition-all duration-300 hover:border-accent hover:bg-fill hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line-strong disabled:hover:bg-transparent disabled:hover:text-ink';
+  'inline-flex min-h-12 items-center justify-center rounded-full border border-line-strong bg-transparent px-4 py-2.5 text-label-sm sm:px-6 text-ink transition-all duration-300 hover:border-accent hover:bg-fill hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line-strong disabled:hover:bg-transparent disabled:hover:text-ink';
 export default function AdminPagination({
   page,
   total,
@@ -35,7 +35,7 @@ export default function AdminPagination({
   return (
     <nav
       aria-label="Phân trang"
-      className="flex items-center justify-between border-t mt-4 border-line pt-md"
+      className="flex items-center justify-between gap-2 border-t mt-4 border-line pt-md"
     >
       <button
         type="button"
@@ -46,9 +46,9 @@ export default function AdminPagination({
         Trước
       </button>
 
-      <span className="flex items-center gap-3.5">
+      <span className="flex min-w-0 items-center gap-3.5">
         {totalPages > 1 && (
-          <span className="flex items-center gap-1.5">
+          <span className="hidden items-center gap-1.5 sm:flex">
             {getPageDots(totalPages, page).map((n) => (
               <button
                 key={n}

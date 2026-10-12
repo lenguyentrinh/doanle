@@ -52,8 +52,8 @@ export default function UnifiedLayoutContent({
       <section
         className={
           isAdmin
-            ? 'flex-1 px-[clamp(20px,3vw,48px)] pt-9 pb-14'
-            : 'flex-1 px-md py-10 md:px-lg'
+            ? 'min-w-0 flex-1 px-[clamp(20px,3vw,48px)] pt-6 pb-14 md:pt-9'
+            : 'min-w-0 flex-1 px-md py-10 md:px-lg'
         }
       >
         <div className="mx-auto w-full">{children}</div>

@@ -272,14 +272,14 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
     <div className="mx-auto flex w-full flex-col gap-5">
       <Link
         href="/admin/products"
-        className="inline-flex w-fit items-center gap-2 text-body-sm text-ink-muted transition-all duration-200 hover:gap-3 hover:text-accent"
+        className="inline-flex min-h-10 w-fit items-center gap-2 text-body-sm text-ink-muted transition-all duration-200 hover:gap-3 hover:text-accent"
       >
         <span aria-hidden="true">←</span> Danh sách sản phẩm
       </Link>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
         <div className="flex flex-wrap items-end justify-between gap-4 motion-safe:animate-[rise_0.5s_cubic-bezier(0.16,1,0.3,1)_both]">
-          <div className="flex flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-label-xs text-accent">{isEditing ? 'Sửa sản phẩm' : 'Sản phẩm mới'}</span>
               {isEditing && (
@@ -295,7 +295,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                 {isActive ? 'Đang bán' : 'Ngừng bán'}
               </span>
             </div>
-            <h1 className="font-display text-[clamp(28px,3.2vw,42px)] leading-[1.06] tracking-[-0.02em] text-ink">
+            <h1 className="break-words font-display text-[clamp(28px,3.2vw,42px)] leading-[1.06] tracking-[-0.02em] text-ink">
               {displayName}
             </h1>
           </div>
@@ -321,17 +321,17 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
         </div>
 
         <div
-          className="grid items-start gap-4 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_340px]"
+          className="grid grid-cols-1 items-start gap-4 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_340px]"
           style={{ animationDelay: '0.06s' }}
         >
           <div className="flex min-w-0 flex-col gap-4">
             {/* Not overflow-hidden: it would clip the category listbox panel. */}
             <div className="rounded-[16px] border border-line bg-white">
-              <div className="flex items-center justify-between gap-3 rounded-t-[15px] border-b border-line bg-fill px-[22px] py-3.5">
+              <div className="flex items-center justify-between gap-3 rounded-t-[15px] border-b border-line bg-fill px-4 py-3.5 sm:px-[22px]">
                 <h2 className="text-label-xs text-ink-secondary">Thông tin</h2>
                 <span className="font-display text-[13px] italic text-ink-muted">phần khách hàng đọc</span>
               </div>
-              <div className="flex flex-col gap-[22px] p-[22px]">
+              <div className="flex flex-col gap-[22px] p-4 sm:p-[22px]">
                 <div className="flex flex-col gap-[7px]">
                   <label htmlFor="name" className="text-label-xs text-ink-muted">
                     Tên sản phẩm<span className="text-error-strong"> *</span>
@@ -383,10 +383,10 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
             </div>
 
             <div className="overflow-hidden rounded-[16px] border border-line bg-white">
-              <div className="border-b border-line bg-fill px-[22px] py-3.5">
+              <div className="border-b border-line bg-fill px-4 py-3.5 sm:px-[22px]">
                 <h2 className="text-label-xs text-ink-secondary">Giá &amp; kho</h2>
               </div>
-              <div className="grid gap-[22px] p-[22px] sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-[22px] p-4 sm:p-[22px] sm:grid-cols-2 lg:grid-cols-3">
                 <div className="flex flex-col gap-[7px]">
                   <label htmlFor="price" className="text-label-xs text-ink-muted">
                     Giá (₫)<span className="text-error-strong"> *</span>
@@ -464,7 +464,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                             shouldDirty: true,
                           })
                         }
-                        className="grid size-7 place-items-center rounded-full border border-line-strong text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+                        className="grid size-9 place-items-center sm:size-7 rounded-full border border-line-strong text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         −
                       </button>
@@ -475,7 +475,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                         onClick={() =>
                           setValue('stockQuantity', stockQuantity + 1, { shouldValidate: true, shouldDirty: true })
                         }
-                        className="grid size-7 place-items-center rounded-full border border-line-strong text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+                        className="grid size-9 place-items-center sm:size-7 rounded-full border border-line-strong text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         ＋
                       </button>
@@ -490,7 +490,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[16px] border border-line bg-white px-[22px] py-5">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[16px] border border-line bg-white px-4 py-5 sm:px-[22px]">
               <div className="flex flex-col gap-1">
                 <span className="text-label-xs text-ink-muted">Trạng thái</span>
                 <span className="text-body-sm text-ink-secondary">
@@ -544,7 +544,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                           aria-label="Xoá ảnh"
                           onClick={() => removeExistingImage(img.key)}
                           disabled={isLoading}
-                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-ink text-white transition-colors duration-200 hover:bg-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          className="absolute -right-2 -top-2 flex size-8 items-center justify-center rounded-full bg-ink text-white sm:size-6 transition-colors duration-200 hover:bg-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                         >
                           ×
                         </button>
@@ -567,7 +567,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                           type="button"
                           aria-label="Xoá ảnh"
                           onClick={() => removeNewFile(i)}
-                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-ink text-white transition-colors duration-200 hover:bg-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          className="absolute -right-2 -top-2 flex size-8 items-center justify-center rounded-full bg-ink text-white sm:size-6 transition-colors duration-200 hover:bg-error-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                         >
                           ×
                         </button>
@@ -633,7 +633,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
           </aside>
         </div>
 
-        <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-4 rounded-full border border-line bg-white/92 py-3 pr-3 pl-6 shadow-card backdrop-blur-[12px]">
+        <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
           <span className={`flex items-center gap-2.5 text-[13px] ${dirty ? 'text-alert' : 'text-ink-muted'}`}>
             <span aria-hidden="true" className={`size-1.5 rounded-full ${dirty ? 'bg-alert' : 'bg-success'}`} />
             {dirty
@@ -644,19 +644,19 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                 ? 'Đã lưu mọi thay đổi'
                 : 'Điền các trường có dấu * để lưu'}
           </span>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex w-full flex-wrap gap-2.5 sm:w-auto">
             <button
               type="button"
               onClick={handleReset}
               disabled={isSubmitting}
-              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-line-strong px-[22px] text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-full border sm:flex-none border-line-strong px-[22px] text-label-xs text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isEditing ? 'Hoàn tác' : 'Huỷ'}
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isLoading}
-              className="inline-flex min-h-[46px] items-center justify-center gap-3 rounded-full bg-ink px-[26px] text-label-xs text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-3 rounded-full bg-ink sm:flex-none px-[26px] text-label-xs text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isSubmitting ? (isEditing ? 'Đang lưu' : 'Đang tạo') : isEditing ? 'Lưu thay đổi' : 'Lưu sản phẩm'}
               {isSubmitting && (

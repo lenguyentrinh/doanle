@@ -21,7 +21,7 @@ const TONE_CLASSES: Record<
 
 export default function AdminStatStrip({ items }: { items: AdminStatItem[] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => {
         const tone = TONE_CLASSES[item.tone ?? 'default'];
         return (

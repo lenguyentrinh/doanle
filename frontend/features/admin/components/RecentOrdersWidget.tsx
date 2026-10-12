@@ -19,7 +19,7 @@ export default function RecentOrdersWidget({
 }) {
   return (
     <div className="rounded-2xl border border-line bg-white">
-      <div className="flex items-center justify-between gap-4 border-b border-line px-[22px] py-[18px]">
+      <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-[18px] sm:px-[22px]">
         <h2 className="text-label-xs text-ink-secondary">Đơn gần đây</h2>
         <Link
           href="/admin/orders"
@@ -38,14 +38,14 @@ export default function RecentOrdersWidget({
             <li key={order.id} className="border-b border-line last:border-b-0">
               <Link
                 href={`/admin/orders/${order.id}`}
-                className="flex items-center gap-4 px-[22px] py-4 transition-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-inset"
+                className="flex items-center gap-3 px-4 py-4 sm:gap-4 sm:px-[22px] transition-colors duration-200 hover:bg-fill focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-inset"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-fill font-display text-[15px] leading-none text-ink-secondary">
                   {getInitials(order.customerName)}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                  <span className="text-[14px] text-ink">{order.customerName}</span>
-                  <span className="text-caption text-ink-muted">
+                  <span className="truncate text-[14px] text-ink">{order.customerName}</span>
+                  <span className="truncate text-caption text-ink-muted">
                     Đơn #{order.id} · {formatDate(order.createdAt)} · {order.itemCount} sản phẩm
                   </span>
                 </span>

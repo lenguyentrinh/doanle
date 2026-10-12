@@ -103,7 +103,7 @@ function toFormValues(hero: HomeHero): HomeHeroFormValues {
 function StepTitle({ n, title, aside }: { n: string; title: string; aside?: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-2.5">
-      <div className="flex items-baseline gap-2.5">
+      <div className="flex min-w-0 items-baseline gap-2.5">
         <span className="font-display text-[15px] italic text-accent">{n}</span>
         <span className="font-display text-[21px] text-ink">{title}</span>
       </div>
@@ -331,10 +331,10 @@ export default function HomeHeroManager() {
         </div>
       </AdminPageHeader>
 
-      <div className="grid items-start gap-6 min-[1180px]:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid grid-cols-1 items-start gap-6 min-[1180px]:grid-cols-[minmax(0,1fr)_400px]">
         <div className="flex min-w-0 flex-col gap-3.5 min-[1180px]:sticky min-[1180px]:top-[100px]">
           <div className="overflow-hidden rounded-[18px] border border-line bg-white shadow-[0_40px_80px_-48px_rgba(150,110,78,0.5)]">
-            <div className="flex items-center justify-between gap-3 border-b border-line bg-auth-ground px-3.5 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-auth-ground px-3.5 py-2.5">
               <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-[5px] text-[12px] text-ink-secondary">
                 <span className="size-1.5 rounded-full bg-success" />
                 oren.store
@@ -394,7 +394,7 @@ export default function HomeHeroManager() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-7 rounded-[18px] border border-line bg-white p-6">
+        <div className="flex min-w-0 flex-col gap-7 rounded-[18px] border border-line bg-white p-4 sm:p-6">
           <section className="flex flex-col gap-[18px]">
             <StepTitle n="01" title="Nội dung" />
             <label className="block">
@@ -464,7 +464,7 @@ export default function HomeHeroManager() {
                               type="button"
                               aria-label="Xoá ảnh"
                               onClick={() => setImages(images.filter((_, j) => j !== i))}
-                              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink/80 text-white transition-colors hover:bg-error-strong"
+                              className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-ink/80 text-white transition-colors hover:bg-error-strong"
                             >
                               ×
                             </button>
@@ -472,7 +472,7 @@ export default function HomeHeroManager() {
                               type="button"
                               onClick={() => openPicker(i)}
                               disabled={uploading !== null}
-                              className="absolute bottom-2 left-2 rounded-full bg-white/90 px-3 py-1 text-label-xs text-ink hover:bg-white disabled:opacity-50"
+                              className="absolute bottom-2 left-2 rounded-full bg-white/90 px-3 py-1.5 text-label-xs text-ink hover:bg-white disabled:opacity-50"
                             >
                               {uploading === i ? 'Đang tải' : 'Đổi'}
                             </button>

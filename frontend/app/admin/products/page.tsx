@@ -205,11 +205,11 @@ export default function AdminProductsPage() {
       </div>
 
       <div
-        className="relative z-10 grid items-center gap-3 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_auto]"
+        className="relative z-10 grid grid-cols-1 items-center gap-3 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_auto]"
         style={{ animationDelay: '0.08s' }}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 flex-1 items-center gap-2.5 rounded-full border border-line bg-fill px-[18px] transition-all duration-200 focus-within:border-line-strong focus-within:bg-white">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex h-12 w-full flex-1 items-center gap-2.5 rounded-full border border-line bg-fill px-[18px] transition-all duration-200 focus-within:border-line-strong focus-within:bg-white">
             <FiSearch aria-hidden="true" size={15} className="text-ink-muted" />
             <input
               type="search"
@@ -231,7 +231,7 @@ export default function AdminProductsPage() {
               setPage(1);
             }}
             ariaLabel="Lọc theo danh mục"
-            className="w-[180px] shrink-0"
+            className="w-full sm:w-[180px] sm:shrink-0"
           />
         </div>
         <AdminSegmented
@@ -254,8 +254,79 @@ export default function AdminProductsPage() {
           description="Thử bỏ bộ lọc hoặc từ khoá khác."
         />
       ) : (
+        <>
+        <ul className="flex flex-col gap-3 md:hidden">
+          {visibleProducts.map((product) => {
+            const tint = tintForCategory(product.category);
+            const out = product.stockQuantity === 0;
+            const low = product.stockQuantity > 0 && product.stockQuantity < 5;
+            const pill = statusPill(product);
+            const archived = product.deletedAt !== null;
+            return (
+              <li
+                key={product.id}
+                className={`flex flex-col gap-3 rounded-[16px] border border-line bg-white p-4 ${archived ? 'opacity-70' : ''}`}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={`grid h-[52px] w-[46px] shrink-0 place-items-center rounded-t-[23px] rounded-b-[6px] font-display text-[19px] leading-none ${tint.bg} ${tint.ink}`}
+                  >
+                    {product.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                    <span className={`break-words text-[14px] ${archived ? 'text-ink-muted' : 'text-ink'}`}>
+                      {product.name}
+                    </span>
+                    <span className="text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
+                  </span>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-1 text-label-xs ${pill.bg} ${pill.fg}`}
+                  >
+                    <span aria-hidden="true" className={`size-[5px] shrink-0 rounded-full ${pill.dot}`} />
+                    {pill.label}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                  <span className={`max-w-full truncate rounded-full px-[11px] py-1 text-[12px] ${tint.bg} ${tint.ink}`}>
+                    {product.category}
+                  </span>
+                  <span className="font-display text-[17px] tabular-nums text-ink">
+                    {formatPrice(product.price)}
+                  </span>
+                </div>
+                <div
+                  className={`text-[13px] tabular-nums ${out ? 'text-error-strong' : low ? 'text-alert' : 'text-ink-muted'}`}
+                >
+                  {out ? 'Hết hàng · cần nhập' : `còn ${product.stockQuantity} · ${low ? 'sắp hết' : 'đủ hàng'}`}
+                </div>
+                <div className="flex items-center justify-end gap-2 border-t border-line pt-3">
+                  {archived ? (
+                    <span className="font-display text-[13px] italic text-ink-faint">đã lưu trữ</span>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="inline-flex min-h-10 items-center rounded-full px-4 text-label-xs text-ink transition-colors duration-200 hover:text-accent"
+                      >
+                        Sửa
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setPendingArchive(product)}
+                        className="inline-flex min-h-10 items-center rounded-full px-4 text-label-xs text-ink-muted transition-colors duration-200 hover:text-error-strong"
+                      >
+                        Lưu trữ
+                      </button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
         <div
-          className="overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
+          className="hidden overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
           style={{ animationDelay: '0.12s' }}
         >
           <div className="min-w-[1000px]">
@@ -367,6 +438,7 @@ export default function AdminProductsPage() {
             })}
           </div>
         </div>
+        </>
       )}
 
       {!loading && total > 0 && (

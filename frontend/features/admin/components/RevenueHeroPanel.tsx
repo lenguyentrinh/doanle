@@ -34,7 +34,7 @@ export default function RevenueHeroPanel({
     previousMonthRevenue > 0 ? (revenue - previousMonthRevenue) / previousMonthRevenue : null;
 
   return (
-    <div className="relative grid gap-7 overflow-hidden rounded-xl bg-ink-soft p-8 shadow-hero lg:grid-cols-[1.05fr_1fr]">
+    <div className="relative grid grid-cols-1 gap-7 overflow-hidden rounded-xl bg-ink-soft p-5 shadow-hero sm:p-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       <span
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-[40%] -left-[10%] aspect-square w-[46%] rounded-full bg-accent opacity-[.22] blur-[80px] motion-safe:animate-drift"
@@ -48,7 +48,7 @@ export default function RevenueHeroPanel({
         <span className="text-label-xs text-accent-soft">Doanh thu tháng này</span>
 
         <div className="flex flex-col gap-3.5">
-          <span className="font-display text-[clamp(38px,4.4vw,62px)] leading-[1.02] tracking-[-0.026em] tabular-nums text-white">
+          <span className="break-words font-display text-[30px] sm:text-[clamp(38px,4.4vw,62px)] leading-[1.02] tracking-[-0.026em] tabular-nums text-white">
             {formatPrice(animatedRevenue)}
           </span>
           {deltaPct !== null && (
@@ -63,7 +63,7 @@ export default function RevenueHeroPanel({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-[26px] border-t border-white/12 pt-[18px]">
+        <div className="flex flex-wrap gap-x-[26px] gap-y-4 border-t border-white/12 pt-[18px]">
           <span className="flex flex-col gap-[5px]">
             <span className="text-[10px] uppercase tracking-[.2em] text-white/45">
               Giá trị đơn TB

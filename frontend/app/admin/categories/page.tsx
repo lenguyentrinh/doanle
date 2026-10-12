@@ -201,7 +201,7 @@ export default function AdminCategoriesPage() {
       </AdminPageHeader>
 
       <div
-        className="grid items-center gap-3 motion-safe:animate-[rise_0.55s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,380px)_1fr]"
+        className="grid grid-cols-1 items-center gap-3 motion-safe:animate-[rise_0.55s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,380px)_1fr]"
         style={{ animationDelay: '0.05s' }}
       >
         <form
@@ -229,8 +229,8 @@ export default function AdminCategoriesPage() {
           </button>
         </form>
 
-        <div className="flex items-center justify-end gap-2.5">
-          <div className="flex items-center gap-2 border-b border-line px-0.5 pb-1 transition-colors duration-200 focus-within:border-accent">
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
+          <div className="flex min-w-[150px] flex-1 items-center gap-2 border-b border-line px-0.5 pb-1 transition-colors duration-200 focus-within:border-accent">
             <FiSearch aria-hidden="true" size={14} className="text-ink-muted" />
             <input
               type="search"
@@ -238,7 +238,7 @@ export default function AdminCategoriesPage() {
               onChange={(e) => setFilterInput(e.target.value)}
               placeholder="Lọc danh mục"
               aria-label="Lọc danh mục"
-              className="h-7 w-[150px] border-0 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-ink-muted"
+              className="h-7 w-full min-w-0 border-0 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-ink-muted"
             />
           </div>
           <AdminSegmented
@@ -263,7 +263,7 @@ export default function AdminCategoriesPage() {
         <>
           {categories.length > 0 && (
             <div
-              className="grid gap-4 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] min-[720px]:grid-cols-2 min-[1080px]:grid-cols-3"
+              className="grid grid-cols-1 gap-4 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] min-[720px]:grid-cols-2 min-[1080px]:grid-cols-3"
               style={{ animationDelay: '0.1s' }}
             >
               {categories.map((category, i) => {
@@ -322,7 +322,7 @@ export default function AdminCategoriesPage() {
                               type="button"
                               onClick={() => handleRename(category.id)}
                               disabled={savingId === category.id || !editingName.trim()}
-                              className="flex h-[38px] flex-1 items-center justify-center rounded-full bg-ink text-label-xs text-white transition-colors duration-200 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                              className="flex h-[38px] max-sm:h-11 flex-1 items-center justify-center rounded-full bg-ink text-label-xs text-white transition-colors duration-200 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               Lưu
                             </button>
@@ -330,7 +330,7 @@ export default function AdminCategoriesPage() {
                               type="button"
                               onClick={cancelEditing}
                               disabled={savingId === category.id}
-                              className="flex h-[38px] flex-1 items-center justify-center rounded-full border border-line-strong text-label-xs text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+                              className="flex h-[38px] max-sm:h-11 flex-1 items-center justify-center rounded-full border border-line-strong text-label-xs text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               Hủy
                             </button>
@@ -339,7 +339,7 @@ export default function AdminCategoriesPage() {
                       ) : (
                         <div className="flex flex-1 flex-col gap-3.5">
                           <div className="flex flex-col gap-[5px]">
-                            <span className="font-display text-[21px] text-ink">{category.name}</span>
+                            <span className="break-words font-display text-[21px] text-ink">{category.name}</span>
                           </div>
                           <div className="mt-auto flex flex-col gap-3">
                             <span className="relative h-[3px] w-full rounded-full bg-line">
@@ -348,11 +348,11 @@ export default function AdminCategoriesPage() {
                                 style={{ width: `${pct}%` }}
                               />
                             </span>
-                            <div className="flex items-center gap-3.5 border-t border-line pt-3">
+                            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-line pt-3">
                               <button
                                 type="button"
                                 onClick={() => startEditing(category)}
-                                className="text-label-xs text-ink transition-colors duration-200 hover:text-accent"
+                                className="max-sm:py-2.5 text-label-xs text-ink transition-colors duration-200 hover:text-accent"
                               >
                                 Đổi tên
                               </button>
@@ -361,13 +361,13 @@ export default function AdminCategoriesPage() {
                                 type="button"
                                 onClick={() => setPendingDelete(category)}
                                 aria-label={`Xoá ${category.name}`}
-                                className="text-label-xs text-ink-muted transition-colors duration-200 hover:text-error-strong"
+                                className="max-sm:py-2.5 text-label-xs text-ink-muted transition-colors duration-200 hover:text-error-strong"
                               >
                                 Xoá
                               </button>
                               <Link
                                 href={`/admin/products?categoryId=${category.id}`}
-                                className="ml-auto text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent"
+                                className="ml-auto max-sm:py-2.5 text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent"
                               >
                                 Xem sản phẩm
                               </Link>

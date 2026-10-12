@@ -68,7 +68,7 @@ export default function AdminConfirmDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[150] grid place-items-center bg-[rgba(47,37,30,0.42)] p-6 backdrop-blur-[3px] motion-safe:animate-overlay-in"
+      className="fixed inset-0 z-[150] grid place-items-center bg-[rgba(47,37,30,0.42)] p-4 backdrop-blur-[3px] motion-safe:animate-overlay-in sm:p-6"
       onMouseDown={onCancel}
     >
       <div
@@ -78,11 +78,11 @@ export default function AdminConfirmDialog({
         aria-labelledby="admin-confirm-title"
         tabIndex={-1}
         onMouseDown={(e) => e.stopPropagation()}
-        className="w-full max-w-[400px] rounded-[18px] bg-white p-7 shadow-overlay motion-safe:animate-admin-modal-in"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-[400px] overflow-y-auto rounded-[18px] bg-white p-5 shadow-overlay motion-safe:animate-admin-modal-in sm:p-7"
       >
         <div className="flex flex-col gap-2.5">
           <span className="text-label-xs text-error-strong">{actionLabel}</span>
-          <h2 id="admin-confirm-title" className="font-display text-[26px] text-ink">
+          <h2 id="admin-confirm-title" className="break-words font-display text-[26px] text-ink">
             {title}
           </h2>
           <p className="text-body-sm text-ink-secondary">{description}</p>

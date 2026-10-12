@@ -168,7 +168,7 @@ export default function AuthLookbookManager() {
         </div>
       </AdminPageHeader>
 
-      <div className="grid items-start gap-6 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
         <div className="mx-auto w-full max-w-[360px]">
           <div className="relative aspect-[4/5] w-full">
             <span aria-hidden className="absolute -right-[8%] -top-4 aspect-square w-1/2 rounded-full bg-sand" />
@@ -185,7 +185,7 @@ export default function AuthLookbookManager() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-7 rounded-[18px] border border-line bg-white p-5 md:p-6">
+        <div className="flex min-w-0 flex-col gap-7 rounded-[18px] border border-line bg-white p-5 md:p-6">
           <section className="flex flex-col gap-3.5">
             <span className="font-display text-[21px] text-ink">Ảnh</span>
             <input

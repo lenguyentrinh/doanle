@@ -33,10 +33,10 @@ export default function LowStockWidget({
               className="flex flex-col gap-[9px] border-b border-line px-5 py-4 last:border-b-0"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-body-sm text-ink">{product.name}</span>
+                <span className="min-w-0 text-body-sm text-ink">{product.name}</span>
                 <Link
                   href={`/admin/products/${product.id}/edit`}
-                  className="shrink-0 text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  className="-my-2 shrink-0 py-2 pl-2 text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   Sửa
                 </Link>

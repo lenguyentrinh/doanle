@@ -193,7 +193,7 @@ export default function DiscountManager() {
       <AdminPageHeader title="Giảm giá" />
 
       <div
-        className="relative z-10 grid items-center gap-3 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_220px]"
+        className="relative z-10 grid grid-cols-1 items-center gap-3 motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both] lg:grid-cols-[minmax(0,1fr)_220px]"
         style={{ animationDelay: '0.06s' }}
       >
         <div className="flex h-12 items-center gap-2.5 rounded-full border border-line bg-fill px-[18px] transition-all duration-200 focus-within:border-line-strong focus-within:bg-white">
@@ -229,7 +229,7 @@ export default function DiscountManager() {
           <button
             type="button"
             onClick={() => setSelected(new Set())}
-            className="text-label-xs text-ink-muted transition-colors duration-200 hover:text-error-strong"
+            className="py-2 text-label-xs text-ink-muted transition-colors duration-200 hover:text-error-strong"
           >
             Bỏ chọn tất cả
           </button>
@@ -244,8 +244,86 @@ export default function DiscountManager() {
           description="Thử bỏ bộ lọc hoặc từ khoá khác."
         />
       ) : (
+        <>
+        <div className="flex items-center gap-3 px-1 md:hidden">
+          <input
+            type="checkbox"
+            id="discount-select-all-mobile"
+            checked={allVisibleSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+            }}
+            onChange={toggleAllVisible}
+            className="size-[22px] rounded border-line-strong accent-success"
+          />
+          <label htmlFor="discount-select-all-mobile" className="text-label-xs text-ink-muted">
+            Chọn tất cả sản phẩm đang hiển thị
+          </label>
+        </div>
+        <ul className="flex flex-col gap-3 md:hidden">
+          {products.map((product) => {
+            const tint = tintForCategory(product.category);
+            const checked = selected.has(product.id);
+            const hasDiscount = product.discountPercentage !== null && product.discountPercentage !== undefined;
+            return (
+              <li key={product.id}>
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-[16px] border border-line p-4 transition-colors duration-200 ${checked ? 'bg-fill' : 'bg-white'}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(product.id)}
+                    aria-label={`Chọn ${product.name}`}
+                    className="mt-1 size-[22px] shrink-0 rounded border-line-strong accent-success"
+                  />
+                  {product.imageUrls[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- backend-served upload thumbnail, not a Next-optimizable static asset
+                    <img
+                      src={product.imageUrls[0]}
+                      alt=""
+                      className="h-[52px] w-[46px] shrink-0 rounded-t-[23px] rounded-b-[6px] object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className={`grid h-[52px] w-[46px] shrink-0 place-items-center rounded-t-[23px] rounded-b-[6px] font-display text-[19px] leading-none ${tint.bg} ${tint.ink}`}
+                    >
+                      {product.name.trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="flex min-w-0 flex-1 flex-col gap-2">
+                    <span className="break-words text-[14px] text-ink">{product.name}</span>
+                    <span className={`w-fit max-w-full truncate rounded-full px-[11px] py-1 text-[12px] ${tint.bg} ${tint.ink}`}>
+                      {product.category}
+                    </span>
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span
+                        className={`font-display text-[17px] tabular-nums ${hasDiscount ? 'text-ink-faint line-through' : 'text-ink'}`}
+                      >
+                        {formatPrice(product.price)}
+                      </span>
+                      {hasDiscount && (
+                        <span className="font-display text-[15px] tabular-nums text-accent">
+                          {formatPrice(product.finalPrice)}
+                        </span>
+                      )}
+                      {hasDiscount ? (
+                        <span className="inline-flex w-fit items-center rounded-full bg-accent px-[11px] py-1 text-[11px] font-semibold text-white">
+                          −{product.discountPercentage}%
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-ink-faint">Không giảm</span>
+                      )}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
         <div
-          className="overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
+          className="hidden overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
           style={{ animationDelay: '0.1s' }}
         >
           <div className="min-w-[760px]">
@@ -341,13 +419,14 @@ export default function DiscountManager() {
             })}
           </div>
         </div>
+        </>
       )}
 
       {!loading && total > 0 && (
         <AdminPagination page={page} total={total} limit={DEFAULT_PAGE_LIMIT} onPageChange={setPage} />
       )}
 
-      <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-4 rounded-full border border-line bg-white/92 py-3 pr-3 pl-6 shadow-card backdrop-blur-[12px]">
+      <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
         <div className="flex items-center gap-2.5">
           <label htmlFor="bulk-discount" className="text-label-xs text-ink-muted">
             % giảm giá
@@ -366,12 +445,12 @@ export default function DiscountManager() {
             <span className="text-body-sm text-ink-muted">%</span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex w-full flex-wrap gap-2.5 sm:w-auto">
           <button
             type="button"
             onClick={() => applyDiscount(null)}
             disabled={selected.size === 0 || applying}
-            className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-line-strong px-[22px] text-label-xs text-ink-secondary transition-all duration-200 hover:border-error-strong hover:text-error-strong disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-full border sm:flex-none border-line-strong px-[22px] text-label-xs text-ink-secondary transition-all duration-200 hover:border-error-strong hover:text-error-strong disabled:cursor-not-allowed disabled:opacity-40"
           >
             Bỏ giảm giá
           </button>
@@ -379,7 +458,7 @@ export default function DiscountManager() {
             type="button"
             onClick={() => applyDiscount(parsedPercentage)}
             disabled={!validPercentage || selected.size === 0 || applying}
-            className="inline-flex min-h-[46px] items-center justify-center gap-3 rounded-full bg-ink px-[26px] text-label-xs text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-3 rounded-full bg-ink sm:flex-none px-[26px] text-label-xs text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {applying ? 'Đang áp dụng' : 'Áp dụng'}
             {applying && (

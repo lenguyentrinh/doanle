@@ -21,7 +21,7 @@ export default function AdminSegmented<T extends string>({
   className = '',
 }: AdminSegmentedProps<T>) {
   return (
-    <div className={`flex w-fit justify-self-end gap-1 rounded-full bg-fill p-1 ${className}`}>
+    <div className={`flex w-full max-w-full gap-1 overflow-x-auto sm:w-fit sm:justify-self-end rounded-full bg-fill p-1 ${className}`}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -30,7 +30,7 @@ export default function AdminSegmented<T extends string>({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(option.value)}
-            className={`whitespace-nowrap rounded-full px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[.16em] transition-colors duration-200 ${
+            className={`flex-1 whitespace-nowrap rounded-full px-3 py-2.5 sm:flex-none sm:px-4 text-[10px] font-semibold uppercase tracking-[.16em] transition-colors duration-200 ${
               active ? 'bg-white text-ink shadow-xs' : 'text-ink-muted hover:text-ink'
             }`}
           >

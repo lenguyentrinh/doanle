@@ -121,30 +121,30 @@ export default function AdminOrderDetailPage() {
     <div className="mx-auto flex w-full flex-col gap-[22px]">
       <Link
         href="/admin/orders"
-        className="inline-flex w-fit items-center gap-2 text-body-sm text-ink-muted transition-colors duration-200 hover:text-accent"
+        className="inline-flex min-h-10 w-fit items-center gap-2 text-body-sm text-ink-muted transition-colors duration-200 hover:text-accent"
       >
         <span aria-hidden="true">←</span> Về danh sách đơn hàng
       </Link>
 
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className="text-label-xs text-accent">Đơn #{order.id}</span>
             <span aria-hidden="true" className="h-px w-3.5 bg-line-strong" />
             <span className="text-body-sm text-ink-muted">{formatDate(order.createdAt)}</span>
           </div>
-          <h1 className="text-display-md text-ink">{customerName}</h1>
+          <h1 className="break-words text-display-md text-ink">{customerName}</h1>
         </div>
         <OrderStatusBadge status={order.status} />
       </header>
 
-      <div className="grid grid-cols-[1.6fr_1fr] items-start gap-6">
-        <div className="flex flex-col gap-5">
-          <section aria-label="Trạng thái đơn hàng" className="rounded-[18px] border border-line bg-white p-7">
+      <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-6">
+        <div className="flex min-w-0 flex-col gap-5">
+          <section aria-label="Trạng thái đơn hàng" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
             <OrderStatusTimeline order={order} />
           </section>
 
-          <section aria-label="Sản phẩm" className="rounded-[18px] border border-line bg-white p-7">
+          <section aria-label="Sản phẩm" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
             <h2 className="mb-3 font-display text-[18px] text-ink">Sản phẩm</h2>
             {order.items.map((item) => (
               <div key={item.id} className="flex items-center gap-4 border-t border-line py-3.5 first:border-t-0">
@@ -159,21 +159,21 @@ export default function AdminOrderDetailPage() {
                     />
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-display text-[15px] text-ink">{item.productName}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="break-words font-display text-[15px] text-ink">{item.productName}</p>
                   <p className="text-body-sm text-ink-muted">Số lượng {item.quantity}</p>
                 </div>
-                <span className="text-body-sm tabular-nums text-ink">{formatPrice(item.price)}</span>
+                <span className="shrink-0 text-body-sm tabular-nums text-ink">{formatPrice(item.price)}</span>
               </div>
             ))}
           </section>
 
-          <div className="grid grid-cols-2 gap-5">
-            <section aria-label="Khách hàng" className="rounded-[18px] border border-line bg-white p-7">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <section aria-label="Khách hàng" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
               <h2 className="mb-2.5 font-display text-[16px] text-ink">Khách hàng</h2>
               <p className="text-body-sm text-ink">{customerName}</p>
               {order.customerEmail && (
-                <p className="mt-0.5 text-body-sm text-ink-secondary">{order.customerEmail}</p>
+                <p className="mt-0.5 break-all text-body-sm text-ink-secondary">{order.customerEmail}</p>
               )}
               {order.customerPhone && (
                 <p className="mt-0.5 text-body-sm text-ink-secondary">{order.customerPhone}</p>
@@ -184,7 +184,7 @@ export default function AdminOrderDetailPage() {
               </p>
             </section>
 
-            <section aria-label="Giao đến" className="rounded-[18px] border border-line bg-white p-7">
+            <section aria-label="Giao đến" className="rounded-[18px] border border-line bg-white p-5 sm:p-7">
               <h2 className="mb-2.5 font-display text-[16px] text-ink">Giao đến</h2>
               <address className="flex flex-col gap-0.5 text-body-sm not-italic text-ink-secondary">
                 <span>{order.shippingAddress.street}</span>
@@ -194,7 +194,7 @@ export default function AdminOrderDetailPage() {
           </div>
         </div>
 
-        <div className="sticky top-9 flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4 md:sticky md:top-9">
           {/* Admin actions: forward-only status advance + pending-only cancel. */}
           {(nextAction || canCancel) && (
             <section aria-label="Hành động" className="flex flex-col gap-2.5 rounded-[18px] bg-ink p-6">

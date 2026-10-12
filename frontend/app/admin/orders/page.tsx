@@ -190,7 +190,7 @@ export default function AdminOrdersPage() {
           })}
         </nav>
 
-        <div className="grid items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex h-12 items-center gap-2.5 rounded-full border border-line bg-fill px-[18px] transition-all duration-200 focus-within:border-line-strong focus-within:bg-white">
             <FiSearch aria-hidden="true" size={15} className="text-ink-muted" />
             <input
@@ -224,8 +224,46 @@ export default function AdminOrdersPage() {
           description="Thử bỏ bộ lọc hoặc từ khoá khác."
         />
       ) : (
+        <>
+        <ul className="flex flex-col gap-3 md:hidden">
+          {orders.map((order) => {
+            const tint = tintForName(order.customerName);
+            return (
+              <li key={order.id}>
+                <Link
+                  href={`/admin/orders/${order.id}`}
+                  className="flex flex-col gap-3 rounded-[16px] border border-line bg-white p-4 transition-colors duration-200 hover:bg-fill"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2.5">
+                      <span aria-hidden="true" className={`h-[26px] w-[3px] shrink-0 rounded-full ${ROW_ACCENT[order.status]}`} />
+                      <span className="font-display text-[17px] tabular-nums text-ink">#{order.id}</span>
+                    </span>
+                    <OrderStatusBadge status={order.status} />
+                  </div>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className={`grid size-9 shrink-0 place-items-center rounded-full font-display text-[14px] leading-none ${tint.bg} ${tint.ink}`}
+                    >
+                      {initialsOf(order.customerName)}
+                    </span>
+                    <span className="min-w-0 truncate text-[14px] text-ink">{order.customerName}</span>
+                  </div>
+                  <div className="flex items-end justify-between gap-3 border-t border-line pt-3">
+                    <span className="flex min-w-0 flex-col gap-[2px]">
+                      <span className="text-[13px] tabular-nums text-ink-secondary">{formatDate(order.createdAt)}</span>
+                      <span className="text-[12px] text-ink-faint">{formatRelativeVi(order.createdAt)}</span>
+                    </span>
+                    <span className="font-display text-[17px] tabular-nums text-ink">{formatPrice(order.total)}</span>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
         <div
-          className="overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
+          className="hidden overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
           style={{ animationDelay: '0.12s' }}
         >
           <div className="min-w-[1020px]">
@@ -290,6 +328,7 @@ export default function AdminOrdersPage() {
             })}
           </div>
         </div>
+        </>
       )}
 
       {!loading && total > 0 && (

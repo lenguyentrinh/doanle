@@ -15,13 +15,13 @@ export default function AdminPageHeader({
 }: AdminPageHeaderProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 motion-safe:animate-[rise_0.5s_cubic-bezier(0.16,1,0.3,1)_both]">
-      <div className="flex flex-col gap-1.5">
+      <div className="flex min-w-0 flex-col gap-1.5">
         <span className="text-label-xs text-accent">{eyebrow}</span>
         <h1 className="font-display text-[clamp(30px,3.4vw,46px)] leading-[1.04] tracking-[-0.02em] text-ink">
           {title}
         </h1>
       </div>
-      {children && <div className="shrink-0">{children}</div>}
+      {children && <div className="max-w-full shrink-0">{children}</div>}
     </div>
   );
 }
