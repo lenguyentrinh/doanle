@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FiSliders, FiX } from 'react-icons/fi';
 import ProductFilters from './ProductFilters';
 import type { CurrentFilters } from '@/features/product/productFilters';
@@ -65,42 +66,44 @@ export default function MobileFilterSheet({
         )}
       </button>
 
-      {open && (
+      {/* Portaled to <body>: the PLP column runs a transform animation, which
+          would otherwise become the containing block of this `fixed` layer
+          and clip it to the column instead of the viewport. */}
+      {open &&
+        createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Bộ lọc"
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-[60] md:hidden"
         >
-          <div
-            aria-hidden="true"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-ink/40 motion-safe:animate-overlay-in"
-          />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-6 shadow-overlay motion-safe:animate-sheet-in">
-            <div className="mb-5 flex items-center justify-between border-b border-line pb-5">
+          <div className="absolute inset-0 flex flex-col bg-white motion-safe:animate-sheet-in">
+            <div className="flex flex-none items-center justify-between border-b border-line px-5 py-4">
               <h2 className="text-headline-sm text-ink">Bộ lọc</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Đóng bộ lọc"
-                className="text-ink-muted transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="-mr-2 flex size-10 items-center justify-center text-ink-muted transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                <FiX aria-hidden="true" size={20} />
+                <FiX aria-hidden="true" size={22} />
               </button>
             </div>
-            <ProductFilters
-              key={filterKey}
-              categories={categories}
-              totalDesignCount={totalDesignCount}
-              priceFloor={priceFloor}
-              priceCeil={priceCeil}
-              current={current}
-              variant="sheet"
-              onApplied={() => setOpen(false)}
-            />
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <ProductFilters
+                key={filterKey}
+                categories={categories}
+                totalDesignCount={totalDesignCount}
+                priceFloor={priceFloor}
+                priceCeil={priceCeil}
+                current={current}
+                variant="sheet"
+                onApplied={() => setOpen(false)}
+              />
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
