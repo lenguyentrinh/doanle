@@ -13,7 +13,7 @@ export default function OtpPage() {
           Nhập mã <em className="italic text-accent">xác minh</em>
         </>
       }
-      subtitle="Mã có hiệu lực trong 10 phút."
+      subtitle="Mã có hiệu lực trong 5 phút."
       footer={
         <Suspense fallback={null}>
           <OtpChangeEmail />

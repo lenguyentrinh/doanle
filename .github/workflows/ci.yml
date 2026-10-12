@@ -37,36 +37,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-  mail-service:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mail-service
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: mail-service/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm exec jest --passWithNoTests
-
-      - name: Build
-        run: pnpm build
-
   frontend:
     runs-on: ubuntu-latest
     defaults:

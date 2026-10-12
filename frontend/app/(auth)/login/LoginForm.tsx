@@ -54,12 +54,12 @@ export default function LoginForm() {
       // err is the rejectWithValue string from the thunk
       resetField("password");
       let message: string;
-      if (err === "Email not verified") {
+      if (err === "Email chưa được xác thực") {
         message = "Vui lòng xác minh email trước.";
-      } else if (err === "Invalid credentials") {
+      } else if (err === "Thông tin đăng nhập không hợp lệ") {
         message = "Email hoặc mật khẩu không đúng.";
       } else {
-        // network failure, timeout, 5xx, or any unexpected rejection
+        // network failure, timeout, 5xx (incl. 429 rate limit), or any unexpected rejection
         message = "Đã có lỗi xảy ra. Vui lòng thử lại.";
       }
       setError("password", { message });

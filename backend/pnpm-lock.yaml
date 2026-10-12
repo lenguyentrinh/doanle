@@ -20,9 +20,6 @@ importers:
       '@nestjs/jwt':
         specifier: ^11.0.2
         version: 11.0.2(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))
-      '@nestjs/microservices':
-        specifier: ^11.0.1
-        version: 11.2.1(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)(amqp-connection-manager@4.1.15(amqplib@0.10.9))(amqplib@0.10.9)(kafkajs@2.2.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/passport':
         specifier: ^11.0.5
         version: 11.0.5(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
@@ -62,15 +59,15 @@ importers:
       helmet:
         specifier: ^8.3.0
         version: 8.3.0
-      kafkajs:
-        specifier: ^2.2.4
-        version: 2.2.4
       multer:
         specifier: ^2.0.2
         version: 2.0.2
       mysql2:
         specifier: ^3.15.3
         version: 3.15.3
+      nodemailer:
+        specifier: ^8.0.1
+        version: 8.0.11
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -120,6 +117,9 @@ importers:
       '@types/node':
         specifier: ^22.10.7
         version: 22.19.0
+      '@types/nodemailer':
+        specifier: ^7.0.11
+        version: 7.0.12
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1
@@ -1017,6 +1017,9 @@ packages:
 
   '@types/node@22.19.0':
     resolution: {integrity: sha512-xpr/lmLPQEj+TUnHmR+Ab91/glhJvsqcjB+yY0Ix9GO70H6Lb4FHH5GeqdOE5btAx7eIMwuHkp4H2MSkLcqWbA==}
+
+  '@types/nodemailer@7.0.12':
+    resolution: {integrity: sha512-80vKwiIsVSyFA1rRovH59jNPLBOuc6dRZIHEu40gXTkBkZnQv8vog1xSGEb9j5q/tdMAs5ivvDR2pLTU0hGHXA==}
 
   '@types/passport-jwt@4.0.1':
     resolution: {integrity: sha512-Y0Ykz6nWP4jpxgEUYq8NoVZeCQPo1ZndJLfapI249g1jHChvRfZRO/LS3tqu26YgAS/laI1qx98sYGz0IalRXQ==}
@@ -2669,6 +2672,10 @@ packages:
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
+  nodemailer@8.0.11:
+    resolution: {integrity: sha512-nrO/pDAUKl+wXX+lx16tDLbnm0fW6sK/x8mgohaCpg+CdCEl482bD4tCuAZk2DyliruiNTIZxRCoWkDqJEnAiA==}
+    engines: {node: '>=6.0.0'}
+
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
@@ -4291,6 +4298,7 @@ snapshots:
       amqp-connection-manager: 4.1.15(amqplib@0.10.9)
       amqplib: 0.10.9
       kafkajs: 2.2.4
+    optional: true
 
   '@nestjs/passport@11.0.5(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)':
     dependencies:
@@ -4533,6 +4541,10 @@ snapshots:
   '@types/node@22.19.0':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/nodemailer@7.0.12':
+    dependencies:
+      '@types/node': 22.19.0
 
   '@types/passport-jwt@4.0.1':
     dependencies:
@@ -6187,7 +6199,8 @@ snapshots:
       jwa: 2.0.1
       safe-buffer: 5.2.1
 
-  kafkajs@2.2.4: {}
+  kafkajs@2.2.4:
+    optional: true
 
   keyv@4.5.4:
     dependencies:
@@ -6377,6 +6390,8 @@ snapshots:
   node-int64@0.4.0: {}
 
   node-releases@2.0.27: {}
+
+  nodemailer@8.0.11: {}
 
   normalize-path@3.0.0: {}
 
