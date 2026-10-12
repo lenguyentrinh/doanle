@@ -263,7 +263,7 @@ export default function AdminOrdersPage() {
           })}
         </ul>
         <div
-          className="hidden overflow-x-auto rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
+          className="hidden overflow-x-auto md:block rounded-[16px] border border-line bg-white motion-safe:animate-[rise_0.6s_cubic-bezier(0.16,1,0.3,1)_both]"
           style={{ animationDelay: '0.12s' }}
         >
           <div className="min-w-[1020px]">
