@@ -87,11 +87,6 @@ export default async function HomePage() {
             <div className="mb-[clamp(22px,3vw,38px)]">
               <SectionHeading
                 title="Danh mục"
-                right={
-                  <span className="whitespace-nowrap text-label-xs text-ink-muted">
-                    Tự chạy · dùng nút để lướt
-                  </span>
-                }
               />
             </div>
             <CategoryCarousel
