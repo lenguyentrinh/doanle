@@ -14,7 +14,7 @@ export default function PageLoader({ label = 'Đang tải trang' }: { label?: st
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-7 bg-paper/90 px-5 backdrop-blur-[2px] motion-safe:animate-[fade-in_0.3s_ease_0.15s_both]"
+      className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-7 bg-paper/95 px-5 motion-safe:animate-[fade-in_0.3s_ease_0.15s_both]"
     >
       <span
         aria-hidden
