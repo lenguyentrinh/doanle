@@ -41,7 +41,7 @@ export default function NotFound() {
         <div className="flex w-full max-w-[560px] flex-col gap-3.5 motion-safe:animate-rise motion-reduce:animate-none [animation-delay:500ms]">
           <SearchBar variant="pill" submitLabel="Tìm" placeholder="Tìm món bạn đang cần…" />
 
-          <div className="flex flex-wrap justify-center gap-2.5">
+          <div className="flex flex-wrap justify-center gap-2.5 max-sm:flex-col max-sm:items-stretch">
             <Link
               href="/"
               className="inline-flex min-h-[50px] items-center justify-center rounded-full bg-ink px-7 py-3.5 text-label-xs text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[2px] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"

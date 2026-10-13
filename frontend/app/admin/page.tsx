@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
             Bảng điều khiển
           </h1>
         </div>
-        <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2">
+        <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2 max-sm:w-full max-sm:justify-center">
           <span
             aria-hidden="true"
             className="size-1.5 rounded-full bg-success motion-safe:animate-admin-pulse"

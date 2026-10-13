@@ -382,7 +382,7 @@ export default function DiscountManager() {
                     )}
                     <span className="flex min-w-0 flex-col gap-[3px]">
                       <span className="truncate text-[14px] text-ink">{product.name}</span>
-                      <span className="text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
+                      <span title={product.id} className="truncate text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
                     </span>
                   </span>
 
@@ -426,7 +426,7 @@ export default function DiscountManager() {
         <AdminPagination page={page} total={total} limit={DEFAULT_PAGE_LIMIT} onPageChange={setPage} />
       )}
 
-      <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
+      <div className="sticky bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
         <div className="flex items-center gap-2.5">
           <label htmlFor="bulk-discount" className="text-label-xs text-ink-muted">
             % giảm giá

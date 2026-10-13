@@ -66,7 +66,7 @@ function TagBody({ product, mobile, onClose }: { product: Product; mobile: boole
       <Link
         href={`/products/${product.id}`}
         onClick={onClose}
-        className="self-center font-display text-[15px] italic text-ink-secondary underline decoration-line-strong underline-offset-4 hover:text-accent"
+        className="self-center max-md:self-stretch max-md:py-2 max-md:text-center font-display text-[15px] italic text-ink-secondary underline decoration-line-strong underline-offset-4 hover:text-accent"
       >
         Xem chi tiết →
       </Link>

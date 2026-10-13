@@ -21,7 +21,7 @@ export default function AdminPageHeader({
           {title}
         </h1>
       </div>
-      {children && <div className="max-w-full shrink-0">{children}</div>}
+      {children && <div className="max-w-full shrink-0 max-sm:w-full">{children}</div>}
     </div>
   );
 }

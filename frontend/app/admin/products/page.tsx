@@ -177,7 +177,7 @@ export default function AdminProductsPage() {
       <AdminPageHeader title="Sản phẩm">
         <Link
           href="/admin/products/new"
-          className="inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full bg-ink px-[26px] text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[2px] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full bg-ink px-[26px] max-sm:w-full text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[2px] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           Thêm sản phẩm
           <span aria-hidden="true" className="text-[13px] leading-none">
@@ -278,7 +278,7 @@ export default function AdminProductsPage() {
                     <span className={`break-words text-[14px] ${archived ? 'text-ink-muted' : 'text-ink'}`}>
                       {product.name}
                     </span>
-                    <span className="text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
+                    <span title={product.id} className="truncate text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
                   </span>
                   <span
                     className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-1 text-label-xs ${pill.bg} ${pill.fg}`}
@@ -365,7 +365,7 @@ export default function AdminProductsPage() {
                       <span className={`truncate text-[14px] ${archived ? 'text-ink-muted' : 'text-ink'}`}>
                         {product.name}
                       </span>
-                      <span className="text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
+                      <span title={product.id} className="truncate text-[12px] tracking-[.04em] text-ink-faint">#{product.id}</span>
                     </span>
                   </span>
 

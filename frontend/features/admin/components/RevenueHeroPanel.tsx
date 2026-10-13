@@ -53,7 +53,7 @@ export default function RevenueHeroPanel({
           </span>
           {deltaPct !== null && (
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft/16 px-3 py-[5px] text-[11px] font-semibold text-accent-soft">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft/16 px-3 py-[5px] max-sm:w-full max-sm:justify-center text-[11px] font-semibold text-accent-soft">
                 {deltaPct >= 0 ? '↑' : '↓'} {formatPercent(Math.abs(deltaPct))}
               </span>
               <span className="text-body-sm text-white/55">

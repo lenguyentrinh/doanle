@@ -138,7 +138,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="mx-auto flex w-full flex-col gap-[22px]">
       <AdminPageHeader title="Đơn hàng">
-        <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2">
+        <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2 max-sm:w-full max-sm:justify-center">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-success motion-safe:animate-admin-pulse" />
           <span className="text-caption text-ink-secondary">
             {stats.pendingOrders} đơn chờ xác nhận
@@ -179,7 +179,7 @@ export default function AdminOrdersPage() {
                   setPage(1);
                 }}
                 aria-pressed={active}
-                className={`inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border px-4 py-2.5 text-label-sm transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-accent ${
+                className={`inline-flex items-center max-sm:grow max-sm:justify-center gap-2.5 whitespace-nowrap rounded-full border px-4 py-2.5 text-label-sm transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-accent ${
                   active ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-secondary'
                 }`}
               >

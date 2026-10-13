@@ -307,7 +307,7 @@ export default function HomeHeroManager() {
           <span
             role="status"
             aria-live="polite"
-            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-caption ${pillCls}`}
+            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-caption max-sm:w-full max-sm:justify-center ${pillCls}`}
           >
             <span className={`size-1.5 rounded-full ${pillDot}`} />
             {pillText}

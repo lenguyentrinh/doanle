@@ -117,7 +117,7 @@ export default function AddressPreview() {
               <button
                 type="button"
                 onClick={() => handleSetDefault(a.id)}
-                className="-my-2 mt-sm w-fit py-2 text-left text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="-my-2 mt-sm w-fit max-sm:w-full py-2 text-left text-label-xs text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Đặt làm mặc định
               </button>

@@ -24,7 +24,7 @@ export default function LogoutPage() {
       <p className="text-body-md text-ink-muted">Đang đăng xuất...</p>
       <Link
         href="/login"
-        className={`mt-4 ${buttonPrimary}`}
+        className={`mt-4 max-sm:w-full ${buttonPrimary}`}
       >
         Đến trang đăng nhập
       </Link>

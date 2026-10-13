@@ -29,7 +29,12 @@ export function useAddToCart() {
   );
   const [status, setStatus] = useState<AddStatus>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { open: openCartDrawer } = useCartDrawer();
+  const { open: openDrawer } = useCartDrawer();
+  // On phones the drawer would cover the whole screen right after each add, so
+  // only the header badge + toast confirm it there; md+ keeps the drawer.
+  const openCartDrawer = useCallback(() => {
+    if (window.matchMedia("(min-width: 768px)").matches) openDrawer();
+  }, [openDrawer]);
 
   useEffect(
     () => () => {

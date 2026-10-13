@@ -129,7 +129,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
           <button
             type="button"
             onClick={() => setMode('new')}
-            className="-my-2 w-fit border-b border-line-strong py-2 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="-my-2 w-fit max-sm:w-full max-sm:text-center border-b border-line-strong py-2 text-label-sm text-ink transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Thêm địa chỉ mới
           </button>
@@ -191,7 +191,7 @@ export default function ShippingStep({ initialAddress, onContinue }: Props) {
               <button
                 type="button"
                 onClick={() => setMode('select')}
-                className="-my-2 w-fit border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="-my-2 w-fit max-sm:w-full max-sm:text-center border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Dùng địa chỉ đã lưu
               </button>

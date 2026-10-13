@@ -20,7 +20,7 @@ export default function Error({
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-5 text-center">
       <h1 className="text-display-md text-ink">Không thể tải danh sách sản phẩm</h1>
       <p className="text-body-md text-ink-muted">Vui lòng thử lại sau ít phút.</p>
-      <div className="flex flex-wrap items-center justify-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-4 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
         <button
           type="button"
           onClick={reset}

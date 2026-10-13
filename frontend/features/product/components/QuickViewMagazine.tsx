@@ -135,7 +135,7 @@ export default function QuickViewMagazine({ product, index, total, onClose, onSt
               <span className={`ml-auto text-[12px] ${stock.cls}`}>{stock.label}</span>
             </div>
             <BuyButton product={product} className="min-h-[50px] w-full pr-14" />
-            <Link href={`/products/${product.id}`} onClick={onClose} className="font-display text-[13px] italic text-ink-muted">
+            <Link href={`/products/${product.id}`} onClick={onClose} className="block py-2 text-center font-display text-[13px] italic text-ink-muted">
               Xem chi tiết · ← trang {leftPage}
             </Link>
           </div>

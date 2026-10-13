@@ -134,7 +134,7 @@ export default function OrdersPage() {
                   setPage(1);
                 }}
                 aria-pressed={filter === tab.value}
-                className={`relative flex items-center gap-2 min-h-10 rounded-full px-4 py-2 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                className={`relative flex items-center max-sm:grow max-sm:justify-center gap-2 min-h-10 rounded-full px-4 py-2 text-label-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 ${
                   filter === tab.value ? 'bg-accent text-white' : 'bg-fill text-ink-secondary hover:text-ink'
                 }`}
               >

@@ -153,7 +153,7 @@ export default function AuthLookbookManager() {
           <span
             role="status"
             aria-live="polite"
-            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-caption ${pillCls}`}
+            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-caption max-sm:w-full max-sm:justify-center ${pillCls}`}
           >
             <span className={`size-1.5 rounded-full ${pillDot}`} />
             {pillText}
@@ -201,7 +201,7 @@ export default function AuthLookbookManager() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading || isSubmitting}
-                className={`${buttonSecondary} min-h-[46px] px-[22px]`}
+                className={`${buttonSecondary} min-h-[46px] px-[22px] max-sm:grow`}
               >
                 {uploading ? 'Đang tải' : imageUrl ? 'Đổi ảnh' : 'Tải ảnh lên'}
               </button>
@@ -210,7 +210,7 @@ export default function AuthLookbookManager() {
                   type="button"
                   onClick={() => setImageUrl(null)}
                   disabled={uploading || isSubmitting}
-                  className={`${buttonSecondary} min-h-[46px] px-[22px]`}
+                  className={`${buttonSecondary} min-h-[46px] px-[22px] max-sm:grow`}
                 >
                   Xoá ảnh
                 </button>

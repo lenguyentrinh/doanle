@@ -307,7 +307,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
               </span>
             )
           ) : (
-            <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2">
+            <div className="flex items-center gap-2.5 rounded-full border border-line px-3.5 py-2 max-sm:w-full max-sm:justify-center">
               <span className="text-caption text-ink-secondary">Hoàn thành</span>
               <span className="relative h-[3px] w-[72px] rounded-full bg-line">
                 <span
@@ -481,7 +481,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
                       </button>
                     </span>
                   </div>
-                  <span className={`inline-flex w-fit items-center gap-[7px] rounded-full px-[11px] py-1 text-[11px] ${stockChip.bg} ${stockChip.fg}`}>
+                  <span className={`inline-flex w-fit items-center gap-[7px] rounded-full px-[11px] py-1 text-[11px] max-sm:w-full max-sm:justify-center ${stockChip.bg} ${stockChip.fg}`}>
                     <span aria-hidden="true" className={`size-[5px] rounded-full ${stockChip.fg.replace('text-', 'bg-')}`} />
                     {stockChip.label}
                   </span>
@@ -633,7 +633,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
           </aside>
         </div>
 
-        <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
+        <div className="sticky bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-white/92 p-3 sm:gap-4 sm:rounded-full sm:py-3 sm:pr-3 sm:pl-6 shadow-card backdrop-blur-[12px]">
           <span className={`flex items-center gap-2.5 text-[13px] ${dirty ? 'text-alert' : 'text-ink-muted'}`}>
             <span aria-hidden="true" className={`size-1.5 rounded-full ${dirty ? 'bg-alert' : 'bg-success'}`} />
             {dirty

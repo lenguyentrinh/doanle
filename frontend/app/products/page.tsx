@@ -302,7 +302,7 @@ export default async function ProductsPage({
                 <Link
                   key={chip.key}
                   href={chip.href}
-                  className="inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-full border border-line-strong px-[15px] py-2 text-[12.5px] [overflow-wrap:anywhere] text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  className="inline-flex min-h-10 max-w-full items-center max-sm:grow max-sm:justify-center gap-1.5 rounded-full border border-line-strong px-[15px] py-2 text-[12.5px] [overflow-wrap:anywhere] text-ink-secondary transition-colors duration-200 hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   {chip.label}
                   <FiX aria-hidden="true" size={10} className="text-ink-muted" />
@@ -325,7 +325,7 @@ export default async function ProductsPage({
               </p>
               <Link
                 href="/products"
-                className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-ink max-sm:w-full px-8 py-4 text-label-sm text-white shadow-btn transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:shadow-btn-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Xoá bộ lọc
               </Link>

@@ -135,7 +135,9 @@ export default function AdminOrderDetailPage() {
           </div>
           <h1 className="break-words text-display-md text-ink">{customerName}</h1>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="max-sm:w-full max-sm:[&>span]:w-full">
+          <OrderStatusBadge status={order.status} />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-6">

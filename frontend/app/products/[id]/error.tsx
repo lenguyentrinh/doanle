@@ -24,7 +24,7 @@ export default function Error({
         Không thể tải sản phẩm này
       </h1>
       <p className="text-body-md text-ink-muted">Vui lòng thử lại sau ít phút.</p>
-      <div className="flex flex-wrap items-center justify-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-4 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
         <button
           type="button"
           onClick={reset}

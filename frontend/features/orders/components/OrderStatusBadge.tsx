@@ -32,6 +32,7 @@ const STATUS_CONFIG: Record<
 export default function OrderStatusBadge({
   status,
   compact = false,
+  className: extraClassName = '',
 }: {
   status: OrderStatus;
   /** Self-sizing pill (`w-auto`) instead of the fixed 160px width — used
@@ -39,12 +40,15 @@ export default function OrderStatusBadge({
    * dashboard's recent orders row) rather than in a column that needs
    * every row's badge to line up at the same width. */
   compact?: boolean;
+  /** Extra classes, e.g. `max-sm:grow` so a badge that wraps onto its own
+   * row stretches to that row's width on phones. */
+  className?: string;
 }) {
   const { label, className, dotClassName } = STATUS_CONFIG[status];
   const sizing = compact ? 'w-auto px-[11px] tracking-[.18em]' : 'w-auto px-3 sm:w-[168px]';
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full py-1 text-label-xs ${sizing} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full py-1 text-label-xs ${sizing} ${className} ${extraClassName}`}
     >
       <span aria-hidden="true" className={`h-[5px] w-[5px] shrink-0 rounded-full ${dotClassName}`} />
       {label}

@@ -89,8 +89,8 @@ export default function Footer() {
           <div className="col-span-2 flex flex-col gap-3 sm:col-span-1 sm:max-w-[280px]">
             <span className="text-label-xs text-white/40">Liên hệ</span>
             <p className="text-body-sm leading-relaxed text-white/75">
-              48 Lý Tự Trọng, Quận 1
-              <br />
+              48 Lý Tự Trọng, Quận 1<span className="sm:hidden">, </span>
+              <br className="hidden sm:block" />
               Hồ Chí Minh
             </p>
             <a
@@ -122,7 +122,7 @@ export default function Footer() {
             {PAY_CHIPS.map((chip) => (
               <span
                 key={chip}
-                className="whitespace-nowrap rounded-full border border-white/16 px-3.5 py-1.5 text-label-xs text-white/60"
+                className="whitespace-nowrap rounded-full border border-white/16 px-3.5 py-1.5 text-label-xs text-white/60 max-sm:grow max-sm:text-center"
               >
                 {chip}
               </span>

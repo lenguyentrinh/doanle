@@ -99,7 +99,7 @@ export default function OrderDetailPage() {
                     </span>
                     <span aria-hidden="true" className="hidden h-px w-3.5 bg-line-strong sm:block" />
                     <span className="text-body-sm text-ink-muted">{formatDate(order.createdAt)}</span>
-                    <OrderStatusBadge status={order.status} />
+                    <OrderStatusBadge status={order.status} className="max-sm:grow" />
                   </div>
                   <h1 className="text-display-md text-ink">{orderHeadline(order)}</h1>
                   <p className="text-body-sm text-ink-secondary">

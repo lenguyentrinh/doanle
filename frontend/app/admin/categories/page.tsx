@@ -184,16 +184,16 @@ export default function AdminCategoriesPage() {
     <div className="mx-auto flex w-full flex-col gap-[22px]">
       <AdminPageHeader title="Danh mục">
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-caption text-ink-secondary">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-caption text-ink-secondary max-sm:grow max-sm:justify-center">
             <span className="font-display text-[15px] text-ink">{stats.totalCategories}</span>
             danh mục
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-caption text-ink-secondary">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-caption text-ink-secondary max-sm:grow max-sm:justify-center">
             <span className="font-display text-[15px] text-ink">{stats.totalProducts}</span>
             sản phẩm
           </span>
           {stats.orphanCount > 0 && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-alert-bg px-3.5 py-2 text-caption text-alert">
+            <span className="inline-flex items-center gap-2 rounded-full bg-alert-bg px-3.5 py-2 text-caption text-alert max-sm:grow max-sm:justify-center">
               {stats.orphanCount} danh mục trống
             </span>
           )}

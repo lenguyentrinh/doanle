@@ -92,7 +92,7 @@ export default function OtpForm() {
         type="button"
         onClick={handleResend}
         disabled={resending || cooldown > 0 || !email}
-        className="self-start py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+        className="self-start max-sm:w-full max-sm:text-center py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {resending
           ? "Đang gửi lại..."

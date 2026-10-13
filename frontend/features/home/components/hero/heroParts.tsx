@@ -140,7 +140,7 @@ export function HeroCtas({
   const s = tone === 'light' ? buttonSecondary : DARK_SECONDARY;
   return (
     <div
-      className={`motion-safe:animate-fade-up motion-safe:[animation-delay:250ms] flex flex-wrap gap-3.5 ${className}`}
+      className={`motion-safe:animate-fade-up motion-safe:[animation-delay:250ms] flex flex-wrap gap-3.5 max-sm:w-full max-sm:flex-col max-sm:items-stretch ${className}`}
     >
       {primary.label && primary.href && (
         <Link href={primary.href} className={`${p} whitespace-nowrap`}>

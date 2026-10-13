@@ -103,7 +103,7 @@ export default function OrderHistoryList({ orders }: { orders: Order[] }) {
                   <span className="text-body-sm tabular-nums text-ink">
                     {formatPrice(order.total)}
                   </span>
-                  <OrderStatusBadge status={order.status} />
+                  <OrderStatusBadge status={order.status} className="max-sm:grow" />
                   <svg
                     aria-hidden="true"
                     width="15"

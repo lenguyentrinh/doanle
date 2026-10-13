@@ -129,7 +129,7 @@ export default function ReviewStep({
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="-my-2 w-fit border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+          className="-my-2 w-fit max-sm:w-full max-sm:text-center border-b border-line py-2 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Quay lại
         </button>

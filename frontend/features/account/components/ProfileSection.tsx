@@ -116,7 +116,7 @@ export default function ProfileSection() {
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-line-strong px-6 py-3 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="inline-flex min-h-12 items-center justify-center max-sm:w-full rounded-full border border-line-strong px-6 py-3 text-label-sm text-ink-secondary transition-all duration-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             Đăng xuất
           </button>

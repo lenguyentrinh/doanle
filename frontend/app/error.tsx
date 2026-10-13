@@ -53,7 +53,7 @@ export default function Error({
       </div>
 
       <div className="relative z-10 flex w-full max-w-[520px] flex-col items-center gap-[18px] motion-safe:animate-rise motion-reduce:animate-none [animation-delay:280ms]">
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
           <button
             type="button"
             onClick={() => startRetry(() => reset())}
