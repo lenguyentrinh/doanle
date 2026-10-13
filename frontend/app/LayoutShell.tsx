@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import NavigationLoader from "@/components/layout/NavigationLoader";
 import { CartDrawerProvider } from "@/features/cart/context/CartDrawerContext";
 import CartDrawer from "@/features/cart/components/CartDrawer";
 import { QuickViewProvider } from "@/features/product/context/QuickViewContext";
@@ -20,6 +22,9 @@ export default function LayoutShell({
     <CartDrawerProvider>
       <QuickViewProvider>
         <ScrollProgressBar />
+        <Suspense fallback={null}>
+          <NavigationLoader />
+        </Suspense>
         <div className="flex min-h-screen flex-col overflow-x-clip bg-paper">
           <ConditionalTicker />
           <ConditionalHeader />

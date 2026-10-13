@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
+import PageLoader from '@/components/PageLoader';
 import UnifiedLayoutContent from '@/components/layout/UnifiedLayoutContent';
 import type { RootState } from '@/store/store';
 
@@ -23,11 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [authChecked, isAuthenticated, isAdmin, router]);
 
   if (!authChecked) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">Đang tải trang quản trị...</p>
-      </div>
-    );
+    return <PageLoader label="Đang tải trang quản trị" />;
   }
   if (!isAuthenticated || !isAdmin) return null;
 
