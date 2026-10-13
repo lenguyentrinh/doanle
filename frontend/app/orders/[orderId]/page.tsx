@@ -9,6 +9,7 @@ import { formatDate, formatPrice, isObjectId } from '@/lib/helpers';
 import { getOrderByIdAPI, type Order } from '@/features/orders/services/ordersAPI';
 import OrderDetail, { orderHeadline } from '@/features/orders/components/OrderDetail';
 import OrderStatusBadge from '@/features/orders/components/OrderStatusBadge';
+import PageLoader from '@/components/PageLoader';
 
 // Same canonical-id guard as order-confirmation/[orderId]/page.tsx and
 // products/[id]/page.tsx's isValidId, duplicated locally (a 1-line check).
@@ -64,13 +65,9 @@ export default function OrderDetailPage() {
   const effectiveState: ViewState = !validId ? 'not-found' : state;
 
   if (!authChecked || (isAuthenticated && effectiveState === 'loading')) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">Đang tải đơn hàng của bạn...</p>
-      </div>
-    );
+    return <PageLoader label="Đang tải đơn hàng của bạn" />;
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) return <PageLoader />;
 
   return (
     <div className="bg-paper">

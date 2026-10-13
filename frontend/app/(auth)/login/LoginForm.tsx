@@ -13,6 +13,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { loginThunk } from "@/features/auth/store/authThunk";
 import { showToast } from "@/lib/toast";
 import { loginSchema, type LoginValues } from "@/features/auth/validation/authSchemas";
+import { pushWithLoader } from "@/lib/navigationLoader";
 
 export default function LoginForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,7 +50,7 @@ export default function LoginForm() {
     try {
       await dispatch(loginThunk(data)).unwrap();
       showToast.success("Đăng nhập thành công");
-      router.push(safeReturn);
+      pushWithLoader(router, safeReturn);
     } catch (err) {
       // err is the rejectWithValue string from the thunk
       resetField("password");

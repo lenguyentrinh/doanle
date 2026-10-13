@@ -12,6 +12,7 @@ import { AppDispatch, RootState } from '@/store/store';
 import { verifyEmailThunk, sendOtpThunk } from '@/features/auth/store/authThunk';
 import { showToast } from '@/lib/toast';
 import { verifyEmailSchema, type VerifyEmailValues } from '@/features/auth/validation/authSchemas';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 export default function VerifyEmailForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -35,7 +36,7 @@ export default function VerifyEmailForm() {
     try {
       await dispatch(verifyEmailThunk({ code: data.code, email })).unwrap();
       showToast.success('Xác minh thành công. Bạn có thể đăng nhập ngay.');
-      router.push('/login');
+      pushWithLoader(router, '/login');
     } catch {
       setError('code', { message: 'Mã không đúng hoặc đã hết hạn. Vui lòng thử lại.' });
     }
@@ -92,7 +93,7 @@ export default function VerifyEmailForm() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/login')}
+          onClick={() => pushWithLoader(router, '/login')}
           className="py-2 text-body-sm text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-200 hover:text-accent hover:decoration-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           Huỷ

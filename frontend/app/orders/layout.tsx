@@ -2,6 +2,7 @@
 
 import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 import AccountShell from '@/components/layout/AccountShell';
+import PageLoader from '@/components/PageLoader';
 
 // Orders share the account shell (rail + editorial portrait) so a shopper's
 // order tracking reads as part of "their account". Uses the same client-side
@@ -17,7 +18,7 @@ export default function OrdersLayout({ children }: { children: React.ReactNode }
       </div>
     );
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) return <PageLoader />;
 
   return (
     <AccountShell activeSection="orders" loadingMessage="Đang tải đơn hàng của bạn...">

@@ -11,6 +11,7 @@ import { AppDispatch, RootState } from '@/store/store';
 import { updateProfileThunk, logoutThunk } from '@/features/auth/store/authThunk';
 import { showToast } from '@/lib/toast';
 import { profileSchema, type ProfileValues } from '@/features/account/validation/accountSchemas';
+import { replaceWithLoader } from '@/lib/navigationLoader';
 
 // Stitch "PERSONAL DETAILS" card: read-only by default, EDIT INFO unlocks the
 // fields. Email is immutable. The single "Legal Name" maps 1:1 to `userName`.
@@ -24,7 +25,7 @@ export default function ProfileSection() {
   // home) — no separate logout endpoint/hook exists for this to call instead.
   const handleLogout = async () => {
     await dispatch(logoutThunk());
-    router.replace('/');
+    replaceWithLoader(router, '/');
   };
 
   const defaults = (): ProfileValues => ({

@@ -11,6 +11,7 @@ import RevenueHeroPanel from '@/features/admin/components/RevenueHeroPanel';
 import RecentOrdersWidget from '@/features/admin/components/RecentOrdersWidget';
 import LowStockWidget from '@/features/admin/components/LowStockWidget';
 import TodoWidget from '@/features/admin/components/TodoWidget';
+import PageLoader from '@/components/PageLoader';
 
 // No SEO need (admin, auth-gated) — Client Component per architecture's
 // Frontend Architecture table. The server-side gate lives in layout.tsx;
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
   }
 
   if (!stats) {
-    return <p className="text-body-md text-ink-muted">Đang tải bảng điều khiển...</p>;
+    return <PageLoader label="Đang tải bảng điều khiển" />;
   }
 
   // Normalize the real 7-day order-count series to 0..1 for MetricCard's

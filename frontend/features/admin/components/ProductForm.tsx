@@ -16,6 +16,7 @@ import {
 } from '@/features/admin/services/adminAPI';
 import { productSchema, type ProductFormValues } from '@/features/admin/validation/productSchemas';
 import AdminSelect from '@/features/admin/components/AdminSelect';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -212,7 +213,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
         await createAdminProductAPI({ ...data, newImages: newFiles });
         showToast.success('Đã tạo sản phẩm');
       }
-      router.push('/admin/products');
+      pushWithLoader(router, '/admin/products');
     } catch (err: unknown) {
       showToast.error(extractErrorMessage(err, 'Không lưu được sản phẩm'));
     }
@@ -224,7 +225,7 @@ export default function ProductForm({ productId = null }: ProductFormProps) {
       setExistingImages(loadedImages);
       setNewFiles([]);
     } else {
-      router.push('/admin/products');
+      pushWithLoader(router, '/admin/products');
     }
   };
 

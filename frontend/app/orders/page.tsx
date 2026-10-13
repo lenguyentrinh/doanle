@@ -9,6 +9,7 @@ import OrderHistoryList from '@/features/orders/components/OrderHistoryList';
 import OrderHistoryListSkeleton from '@/features/orders/components/OrderHistoryListSkeleton';
 import AdminPagination from '@/features/admin/components/AdminPagination';
 import { DEFAULT_PAGE_LIMIT } from '@/lib/pagination';
+import PageLoader from '@/components/PageLoader';
 
 const FILTER_TABS: { label: string; value: OrderStatus | 'all' }[] = [
   { label: 'Tất cả', value: 'all' },
@@ -89,13 +90,9 @@ export default function OrdersPage() {
   }, [authChecked, isAuthenticated]);
 
   if (!authChecked) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">Đang tải đơn hàng của bạn...</p>
-      </div>
-    );
+    return <PageLoader label="Đang tải đơn hàng của bạn" />;
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) return <PageLoader />;
 
   const isEmpty = !loading && orders.length === 0;
 

@@ -13,6 +13,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { sendOtpThunk } from "@/features/auth/store/authThunk";
 import { showToast } from "@/lib/toast";
 import { forgotEmailSchema, type ForgotEmailValues } from "@/features/auth/validation/authSchemas";
+import { pushWithLoader } from "@/lib/navigationLoader";
 
 const LEAVE_MS = 450;
 const TAG_WIDTH = "min(420px,calc(100vw - 32px))";
@@ -112,7 +113,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
   // On /login the tag sits over the login form, so closing is enough; on the
   // OTP page "Đăng nhập" has to actually navigate there.
   const goToLogin = () => {
-    if (pathname !== "/login") router.push("/login");
+    if (pathname !== "/login") pushWithLoader(router, "/login");
     requestClose();
   };
 
@@ -121,7 +122,7 @@ function TagDialog({ onClose, defaultEmail }: Omit<Props, "open">) {
       const result = await dispatch(sendOtpThunk(data)).unwrap();
       showToast.success(result?.message || "Đã gửi mã xác minh");
       requestClose();
-      router.push("/forgotPassword/otp?email=" + encodeURIComponent(data.email));
+      pushWithLoader(router, "/forgotPassword/otp?email=" + encodeURIComponent(data.email));
     } catch (err) {
       showToast.error(err as string);
     }

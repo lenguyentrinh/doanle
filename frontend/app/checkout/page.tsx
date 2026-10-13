@@ -12,6 +12,7 @@ import ShippingStep from '@/features/checkout/components/ShippingStep';
 import DeliveryStep from '@/features/checkout/components/DeliveryStep';
 import PaymentStep from '@/features/checkout/components/PaymentStep';
 import ReviewStep from '@/features/checkout/components/ReviewStep';
+import PageLoader from '@/components/PageLoader';
 
 // Flat under app/, matching app/cart/, app/products/, app/account/ (no
 // app/(shop)/ route group — see Dev Notes / Project Structure Notes).
@@ -37,14 +38,10 @@ export default function CheckoutPage() {
   }, [cartReady, cartItems.length, flow.orderId, router]);
 
   if (!authChecked || (isAuthenticated && !cartLoaded)) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">Đang tải trang thanh toán...</p>
-      </div>
-    );
+    return <PageLoader label="Đang tải trang thanh toán" />;
   }
-  if (!isAuthenticated) return null;
-  if (cartItems.length === 0) return null;
+  if (!isAuthenticated) return <PageLoader />;
+  if (cartItems.length === 0) return <PageLoader />;
 
   return (
     <div className="bg-paper">

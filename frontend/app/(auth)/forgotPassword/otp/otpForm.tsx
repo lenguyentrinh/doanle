@@ -12,6 +12,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { verifyOtpThunk, sendOtpThunk } from "@/features/auth/store/authThunk";
 import { showToast } from "@/lib/toast";
 import { forgotOtpSchema, type ForgotOtpValues } from "@/features/auth/validation/authSchemas";
+import { pushWithLoader } from "@/lib/navigationLoader";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -42,7 +43,7 @@ export default function OtpForm() {
       ).unwrap();
       showToast.success(result?.message || "Xác minh thành công");
       // Thread the OTP to the reset step so it can be re-verified server-side.
-      router.push(
+      pushWithLoader(router, 
         `/forgotPassword/reset?email=${encodeURIComponent(
           email || "",
         )}&otp=${encodeURIComponent(data.otp)}`,

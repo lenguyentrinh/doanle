@@ -13,6 +13,7 @@ import { AppDispatch, RootState } from '@/store/store';
 import { signupThunk } from '@/features/auth/store/authThunk';
 import { showToast } from '@/lib/toast';
 import { signupSchema, type SignupValues } from '@/features/auth/validation/authSchemas';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 const passwordToggleClass =
   'absolute right-0 bottom-[11px] text-[10px] before:absolute before:-inset-x-2 before:-inset-y-3 before:content-[""] font-[550] uppercase tracking-[0.2em] text-ink-muted transition-colors duration-200 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2';
@@ -41,7 +42,7 @@ export default function SignupForm() {
     try {
       await dispatch(signupThunk(payload)).unwrap();
       showToast.success('Kiểm tra email để lấy mã xác minh 6 số');
-      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+      pushWithLoader(router, `/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (err: unknown) {
       if (err === 'Email already exists') {
         setError('email', { message: 'Email này đã được đăng ký.' });

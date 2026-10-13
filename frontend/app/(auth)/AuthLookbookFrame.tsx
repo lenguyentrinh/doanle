@@ -25,7 +25,6 @@ export default async function AuthLookbookFrame() {
           {lookbook.imageUrl && (
             <Image
               fill
-              priority
               sizes="440px"
               className="object-cover"
               src={lookbook.imageUrl}

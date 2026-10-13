@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSearch, FiX } from 'react-icons/fi';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 type SearchBarVariant = 'underline' | 'pill';
 
@@ -38,7 +39,7 @@ export default function SearchBar({
     event.preventDefault();
     const query = value.trim();
     if (!query) return; // empty submit is a no-op
-    router.push(`/products?search=${encodeURIComponent(query)}`);
+    pushWithLoader(router, `/products?search=${encodeURIComponent(query)}`);
   };
 
   return (

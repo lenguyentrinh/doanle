@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import PageLoader from '@/components/PageLoader';
+import { NAVIGATION_START_EVENT } from '@/lib/navigationLoader';
 
 // Safety net so a navigation that never lands (error, cancelled) can't leave
 // the overlay stuck on screen.
@@ -48,6 +49,21 @@ export default function NavigationLoader() {
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
+  }, []);
+
+  // Code-driven navigations (lib/navigationLoader) raise the same overlay.
+  useEffect(() => {
+    const onStart = (e: Event) => {
+      const href = (e as CustomEvent<{ href?: string }>).detail?.href;
+      if (href) {
+        const url = new URL(href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+        if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+      }
+      setFromKey(routeKeyRef.current);
+    };
+    window.addEventListener(NAVIGATION_START_EVENT, onStart);
+    return () => window.removeEventListener(NAVIGATION_START_EVENT, onStart);
   }, []);
 
   useEffect(() => {

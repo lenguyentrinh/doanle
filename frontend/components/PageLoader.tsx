@@ -41,7 +41,7 @@ export default function PageLoader({ label = 'Đang tải trang' }: { label?: st
 
         <span aria-hidden className="relative block h-3 w-[min(220px,60vw)]">
           <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-[1.5px] border-dashed border-line-strong" />
-          <span className="absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_0_4px_rgba(192,95,60,0.15)] motion-safe:animate-[loader-run_1.6s_ease-in-out_infinite_alternate]" />
+          <span className="absolute left-0 top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_0_4px_rgba(192,95,60,0.15)] motion-safe:animate-[loader-run_1.6s_ease-in-out_infinite_alternate]" />
         </span>
       </div>
 

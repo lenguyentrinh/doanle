@@ -16,6 +16,7 @@ import type { OrderStatus } from '@/features/orders/services/ordersAPI';
 import OrderStatusBadge from '@/features/orders/components/OrderStatusBadge';
 import OrderStatusTimeline from '@/features/orders/components/OrderStatusTimeline';
 import AdminConfirmDialog from '@/features/admin/components/AdminConfirmDialog';
+import PageLoader from '@/components/PageLoader';
 
 // The backend `:id` is Mongo ObjectId — same numeric guard as the
 // shopper order pages.
@@ -90,11 +91,7 @@ export default function AdminOrderDetailPage() {
   };
 
   if (state === 'loading') {
-    return (
-      <p className="py-12 text-center text-body-md text-ink-muted">
-        Đang tải đơn hàng…
-      </p>
-    );
+    return <PageLoader label="Đang tải đơn hàng" />;
   }
 
   if (state === 'not-found' || !order) {

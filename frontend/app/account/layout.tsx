@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 import UnifiedLayoutContent from '@/components/layout/UnifiedLayoutContent';
 import type { RootState } from '@/store/store';
+import PageLoader from '@/components/PageLoader';
 
 const navLink =
   'w-fit border-l pl-4 text-body-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-2';
@@ -19,13 +20,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const isAdmin = user?.role === 'admin';
 
   if (!authChecked) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">Đang tải tài khoản của bạn...</p>
-      </div>
-    );
+    return <PageLoader label="Đang tải tài khoản của bạn" />;
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) return <PageLoader />;
 
   const onProfile = pathname === '/account';
 

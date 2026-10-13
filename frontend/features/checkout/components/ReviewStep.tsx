@@ -13,6 +13,7 @@ import { fetchCartThunk } from '@/features/cart/store/cartThunk';
 import { createOrderAPI } from '@/features/orders/services/ordersAPI';
 import type { CartLine } from '@/types/cart';
 import type { CheckoutAddress } from '@/features/checkout/hooks/useCheckoutFlow';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 const ACTIONS_ROW =
   'sticky bottom-0 -mx-5 border-t border-line bg-paper px-5 py-4 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0';
@@ -70,7 +71,7 @@ export default function ReviewStep({
       // badge reads the authenticated count and doesn't fall back to the
       // stale localStorage guest count) before heading to confirmation.
       dispatch(fetchCartThunk());
-      router.push(`/order-confirmation/${currentOrderId}`);
+      pushWithLoader(router, `/order-confirmation/${currentOrderId}`);
     } catch (err: unknown) {
       const message =
         typeof err === 'object' && err !== null && 'response' in err

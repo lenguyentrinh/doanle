@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
+import PageLoader from '@/components/PageLoader';
 import UnifiedLayoutContent from '@/components/layout/UnifiedLayoutContent';
 import { navLink, railLink } from '@/lib/navStyles';
 import type { RootState } from '@/store/store';
@@ -25,13 +26,9 @@ export default function AccountShell({
   const isAdmin = user?.role === 'admin';
 
   if (!authChecked) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-paper">
-        <p className="text-body-md text-ink-muted">{loadingMessage}</p>
-      </div>
-    );
+    return <PageLoader label={loadingMessage.replace(/\.{3}$/, '')} />;
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) return <PageLoader />;
 
   const onProfile = activeSection === 'profile';
   const onOrders = activeSection === 'orders';

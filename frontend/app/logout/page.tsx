@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { buttonPrimary } from '@/components/Button';
 import { AppDispatch } from '@/store/store';
 import { logoutThunk } from '@/features/auth/store/authThunk';
+import { replaceWithLoader } from '@/lib/navigationLoader';
 
 export default function LogoutPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,7 +15,7 @@ export default function LogoutPage() {
 
   useEffect(() => {
     dispatch(logoutThunk()).then(() => {
-      router.replace('/');
+      replaceWithLoader(router, '/');
     });
   }, [dispatch, router]);
 

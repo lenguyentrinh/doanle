@@ -15,6 +15,7 @@ import {
 } from "@/features/cart";
 import { useCartDrawer } from "@/features/cart/context/CartDrawerContext";
 import SearchBar from "@/components/ui/SearchBar";
+import { replaceWithLoader } from "@/lib/navigationLoader";
 
 const navItems = [
   { label: "Trang chủ", href: "/" },
@@ -69,7 +70,7 @@ export default function Header() {
   const handleLogout = async () => {
     setIsOpen(false);
     await dispatch(logoutThunk());
-    router.replace("/");
+    replaceWithLoader(router, "/");
   };
 
   useEffect(() => {

@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!authChecked) {
     return <PageLoader label="Đang tải trang quản trị" />;
   }
-  if (!isAuthenticated || !isAdmin) return null;
+  if (!isAuthenticated || !isAdmin) return <PageLoader />;
 
   return <UnifiedLayoutContent isAdmin>{children}</UnifiedLayoutContent>;
 }

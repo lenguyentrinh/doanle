@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import FreeShippingProgress from '@/features/cart/components/FreeShippingProgress';
 import { formatPrice } from '@/lib/helpers';
 import { SHIPPING_FEE, TAX_RATE, calcTax, calcTotal } from '@/features/cart/constants';
+import { pushWithLoader } from '@/lib/navigationLoader';
 
 interface Props {
   subtotal: number;
@@ -62,7 +63,7 @@ export default function CartSummary({ subtotal, hasOutOfStock = false }: Props) 
           disabled={hasOutOfStock}
           title={checkoutTitle}
           className="w-full"
-          onClick={() => router.push('/checkout')}
+          onClick={() => pushWithLoader(router, '/checkout')}
         >
           Thanh toán
         </Button>
