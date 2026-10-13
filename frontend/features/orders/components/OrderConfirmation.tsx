@@ -26,7 +26,7 @@ export default function OrderConfirmation({ order }: Props) {
         Cảm ơn, <em className="text-accent">{firstName}</em>
       </h1>
       <p className="max-w-[46ch] text-body-md text-ink-secondary">
-        Đơn <span className="break-all text-ink">#{order.id}</span> đang được chuẩn bị. Email xác nhận sẽ
+        Đơn <span title={order.id} className="inline-block max-w-[12rem] truncate align-bottom text-ink">#{order.id}</span> đang được chuẩn bị. Email xác nhận sẽ
         được gửi kèm mã vận đơn ngay khi hàng rời kho.
       </p>
 

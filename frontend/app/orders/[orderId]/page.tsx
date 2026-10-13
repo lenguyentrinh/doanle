@@ -92,9 +92,9 @@ export default function OrderDetailPage() {
               </Link>
 
               <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="break-all text-label-sm uppercase tabular-nums text-ink-muted">
+                <div className="flex min-w-0 max-w-full flex-col gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-3">
+                    <span title={order.id} className="min-w-0 max-w-full truncate text-label-sm uppercase tabular-nums text-ink-muted">
                       Đơn #{order.id}
                     </span>
                     <span aria-hidden="true" className="hidden h-px w-3.5 bg-line-strong sm:block" />

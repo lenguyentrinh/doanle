@@ -235,9 +235,9 @@ export default function AdminOrdersPage() {
                   className="flex flex-col gap-3 rounded-[16px] border border-line bg-white p-4 transition-colors duration-200 hover:bg-fill"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex min-w-0 items-center gap-2.5">
                       <span aria-hidden="true" className={`h-[26px] w-[3px] shrink-0 rounded-full ${ROW_ACCENT[order.status]}`} />
-                      <span className="font-display text-[17px] tabular-nums text-ink">#{order.id}</span>
+                      <span title={order.id} className="min-w-0 truncate font-display text-[17px] tabular-nums text-ink">#{order.id}</span>
                     </span>
                     <OrderStatusBadge status={order.status} />
                   </div>
@@ -285,9 +285,9 @@ export default function AdminOrdersPage() {
                     i === orders.length - 1 ? 'border-b border-transparent' : 'border-b border-line'
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
+                  <span className="flex min-w-0 items-center gap-2.5">
                     <span aria-hidden="true" className={`h-[26px] w-[3px] shrink-0 rounded-full ${ROW_ACCENT[order.status]}`} />
-                    <span className="font-display text-[17px] tabular-nums text-ink">#{order.id}</span>
+                    <span title={order.id} className="min-w-0 truncate font-display text-[17px] tabular-nums text-ink">#{order.id}</span>
                   </span>
 
                   <span className="flex min-w-0 items-center gap-3">

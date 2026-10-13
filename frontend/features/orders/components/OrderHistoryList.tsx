@@ -91,7 +91,7 @@ export default function OrderHistoryList({ orders }: { orders: Order[] }) {
 
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="break-all text-label-sm uppercase text-ink-muted">
+                  <p title={order.id} className="truncate text-label-sm uppercase text-ink-muted">
                     Đơn #{order.id}
                   </p>
                   <p className="mt-1 truncate text-product text-ink">

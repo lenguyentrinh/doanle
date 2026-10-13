@@ -129,7 +129,7 @@ export default function AdminOrderDetailPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="text-label-xs text-accent">Đơn #{order.id}</span>
+            <span title={order.id} className="min-w-0 max-w-full truncate text-label-xs text-accent">Đơn #{order.id}</span>
             <span aria-hidden="true" className="h-px w-3.5 bg-line-strong" />
             <span className="text-body-sm text-ink-muted">{formatDate(order.createdAt)}</span>
           </div>
